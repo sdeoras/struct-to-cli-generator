@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/urfave/cli"
 )
@@ -23,16 +25,16 @@ func (m *manager) GetClusterConf() (*osdconfig.ClusterConfig, error) {
 	}
 	return config, nil
 }
-func (m *manager) GetNodeConf() (*osdconfig.NodeConfig, error) {
-	config := new(osdconfig.NodeConfig)
+func (m *manager) GetNodeConf(id string) (*osdconfig.NodeConfig, error) {
+	configMap := make(map[string]*osdconfig.NodeConfig)
 	if b, err := ioutil.ReadFile("/tmp/nodeConfig.json"); err != nil {
 		return nil, err
 	} else {
-		if err := json.Unmarshal(b, config); err != nil {
+		if err := json.Unmarshal(b, &configMap); err != nil {
 			return nil, err
 		}
 	}
-	return config, nil
+	return configMap[id], nil
 }
 func (m *manager) SetClusterConf(config *osdconfig.ClusterConfig) error {
 	if b, err := json.Marshal(config); err != nil {
@@ -45,7 +47,16 @@ func (m *manager) SetClusterConf(config *osdconfig.ClusterConfig) error {
 	return nil
 }
 func (m *manager) SetNodeConf(config *osdconfig.NodeConfig) error {
-	if b, err := json.Marshal(config); err != nil {
+	configMap := make(map[string]*osdconfig.NodeConfig)
+	if b, err := ioutil.ReadFile("/tmp/nodeConfig.json"); err != nil {
+		logrus.Warn(err)
+	} else {
+		if err := json.Unmarshal(b, configMap); err != nil {
+			logrus.Warn(err)
+		}
+	}
+	configMap[config.NodeId] = config
+	if b, err := json.Marshal(configMap); err != nil {
 		return err
 	} else {
 		if err := ioutil.WriteFile("/tmp/nodeConfig.json", b, 0666); err != nil {
@@ -268,7 +279,7 @@ func main() {
 					Action:      setNodeValues,
 					Flags: []cli.Flag{
 						cli.StringFlag{
-							Name:   "node_id",
+							Name:   "id",
 							Usage:  "(Str)\tusage to be added",
 							Hidden: false,
 						},
@@ -286,7 +297,7 @@ func main() {
 									Hidden: false,
 								},
 								cli.BoolFlag{
-									Name:   "node_id",
+									Name:   "id",
 									Usage:  "(Bool)\tusage to be added",
 									Hidden: false,
 								},
@@ -652,8 +663,15 @@ func main() {
 func setConfigValues(c *cli.Context) error {
 	config, err := clusterManager.GetClusterConf()
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.IsSet("description") {
 		description := c.String("description")
 		config.Description = description
@@ -728,8 +746,15 @@ func setConfigValues(c *cli.Context) error {
 func showConfigValues(c *cli.Context) error {
 	config, err := clusterManager.GetClusterConf()
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.GlobalBool("json") {
 		return printJson(config)
 	}
@@ -788,36 +813,62 @@ func showConfigValues(c *cli.Context) error {
 }
 
 func setNodeValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf()
+	config, err := clusterManager.GetNodeConf(c.String("id"))
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
-	if c.IsSet("node_id") {
-		nodeId := c.String("node_id")
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
+	if c.IsSet("id") {
+		nodeId := c.String("id")
 		config.NodeId = nodeId
 	}
 	return clusterManager.SetNodeConf(config)
 }
 
 func showNodeValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf()
+	config, err := clusterManager.GetNodeConf(c.Parent().String("id"))
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.GlobalBool("json") {
 		return printJson(config)
 	}
-	if c.IsSet("all") || c.IsSet("node_id") {
+	if c.IsSet("all") || c.IsSet("id") {
 		fmt.Println("NodeId:", config.NodeId)
 	}
 	return nil
 }
 
 func setNetworkValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf()
+	config, err := clusterManager.GetNodeConf(c.Parent().String("id"))
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Network == nil {
+		err := errors.New("config.Network" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.IsSet("mgt_iface") {
 		mgtIface := c.String("mgt_iface")
 		config.Network.MgtIface = mgtIface
@@ -830,10 +881,22 @@ func setNetworkValues(c *cli.Context) error {
 }
 
 func showNetworkValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf()
+	config, err := clusterManager.GetNodeConf(c.Parent().String("id"))
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Network == nil {
+		err := errors.New("config.Network" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.GlobalBool("json") {
 		return printJson(config.Network)
 	}
@@ -847,10 +910,22 @@ func showNetworkValues(c *cli.Context) error {
 }
 
 func setStorageValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf()
+	config, err := clusterManager.GetNodeConf(c.Parent().String("id"))
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Storage == nil {
+		err := errors.New("config.Storage" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.IsSet("devices_md") {
 		devicesMd := c.StringSlice("devices_md")
 		config.Storage.DevicesMd = devicesMd
@@ -875,10 +950,22 @@ func setStorageValues(c *cli.Context) error {
 }
 
 func showStorageValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf()
+	config, err := clusterManager.GetNodeConf(c.Parent().String("id"))
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Storage == nil {
+		err := errors.New("config.Storage" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.GlobalBool("json") {
 		return printJson(config.Storage)
 	}
@@ -903,8 +990,20 @@ func showStorageValues(c *cli.Context) error {
 func setSecretsValues(c *cli.Context) error {
 	config, err := clusterManager.GetClusterConf()
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Secrets == nil {
+		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.IsSet("secret_type") {
 		secretType := c.String("secret_type")
 		config.Secrets.SecretType = secretType
@@ -919,8 +1018,20 @@ func setSecretsValues(c *cli.Context) error {
 func showSecretsValues(c *cli.Context) error {
 	config, err := clusterManager.GetClusterConf()
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Secrets == nil {
+		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.GlobalBool("json") {
 		return printJson(config.Secrets)
 	}
@@ -936,8 +1047,25 @@ func showSecretsValues(c *cli.Context) error {
 func setVaultValues(c *cli.Context) error {
 	config, err := clusterManager.GetClusterConf()
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Secrets == nil {
+		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Secrets.Vault == nil {
+		err := errors.New("config.Secrets.Vault" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.IsSet("vault_token") {
 		vaultToken := c.String("vault_token")
 		config.Secrets.Vault.VaultToken = vaultToken
@@ -980,8 +1108,25 @@ func setVaultValues(c *cli.Context) error {
 func showVaultValues(c *cli.Context) error {
 	config, err := clusterManager.GetClusterConf()
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Secrets == nil {
+		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Secrets.Vault == nil {
+		err := errors.New("config.Secrets.Vault" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.GlobalBool("json") {
 		return printJson(config.Secrets.Vault)
 	}
@@ -1018,8 +1163,25 @@ func showVaultValues(c *cli.Context) error {
 func setAwsValues(c *cli.Context) error {
 	config, err := clusterManager.GetClusterConf()
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Secrets == nil {
+		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Secrets.Aws == nil {
+		err := errors.New("config.Secrets.Aws" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.IsSet("aws_access_key_id") {
 		awsAccessKeyId := c.String("aws_access_key_id")
 		config.Secrets.Aws.AwsAccessKeyId = awsAccessKeyId
@@ -1046,8 +1208,25 @@ func setAwsValues(c *cli.Context) error {
 func showAwsValues(c *cli.Context) error {
 	config, err := clusterManager.GetClusterConf()
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
+	if config == nil {
+		err := errors.New("config" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Secrets == nil {
+		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Secrets.Aws == nil {
+		err := errors.New("config.Secrets.Aws" + ": object is a nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
 	if c.GlobalBool("json") {
 		return printJson(config.Secrets.Aws)
 	}

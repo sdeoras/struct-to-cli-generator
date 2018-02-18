@@ -15,13 +15,16 @@ import (
 
 var prefix2VarName map[string]string
 var prefixOrigin map[string]string
+var prefixDepth map[string]int
 var cw *bufio.Writer
 var fw *bufio.Writer
 var header = `package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/urfave/cli"
 	"io/ioutil"
@@ -41,16 +44,16 @@ func (m *manager) GetClusterConf() (*osdconfig.ClusterConfig, error) {
 	}
 	return config, nil
 }
-func (m *manager) GetNodeConf() (*osdconfig.NodeConfig, error) {
-	config := new(osdconfig.NodeConfig)
+func (m *manager) GetNodeConf(id string) (*osdconfig.NodeConfig, error) {
+	configMap := make(map[string]*osdconfig.NodeConfig)
 	if b, err := ioutil.ReadFile("/tmp/nodeConfig.json"); err != nil {
 		return nil, err
 	} else {
-		if err := json.Unmarshal(b, config); err != nil {
+		if err := json.Unmarshal(b, &configMap); err != nil {
 			return nil, err
 		}
 	}
-	return config, nil
+	return configMap[id], nil
 }
 func (m *manager) SetClusterConf(config *osdconfig.ClusterConfig) error {
 	if b, err := json.Marshal(config); err != nil {
@@ -63,7 +66,16 @@ func (m *manager) SetClusterConf(config *osdconfig.ClusterConfig) error {
 	return nil
 }
 func (m *manager) SetNodeConf(config *osdconfig.NodeConfig) error {
-	if b, err := json.Marshal(config); err != nil {
+	configMap := make(map[string]*osdconfig.NodeConfig)
+	if b, err := ioutil.ReadFile("/tmp/nodeConfig.json"); err != nil {
+		logrus.Warn(err)
+	} else {
+		if err := json.Unmarshal(b, configMap); err != nil {
+			logrus.Warn(err)
+		}
+	}
+	configMap[config.NodeId] = config
+	if b, err := json.Marshal(configMap); err != nil {
 		return err
 	} else {
 		if err := ioutil.WriteFile("/tmp/nodeConfig.json", b, 0666); err != nil {
@@ -90,6 +102,7 @@ func main() {
 func main() {
 	prefix2VarName = make(map[string]string)
 	prefixOrigin = make(map[string]string)
+	prefixDepth = make(map[string]int)
 	config := new(osdconfig.ClusterConfig)
 	config.Secrets = new(osdconfig.SecretsConfig)
 	config.Kvdb = new(osdconfig.KvdbConfig)
@@ -105,6 +118,7 @@ func main() {
 	fmt.Fprintln(cw, header)
 	prefix2VarName["config"] = "config"
 	prefixOrigin["config"] = "config"
+	prefixDepth["config"] = 0
 	printFields(reflect.Indirect(reflect.ValueOf(config)), false, "config", "usage", "description", "\t\t")
 	fmt.Fprintln(cw, tabs("\t", 0), "}")
 	fmt.Fprintln(cw, tabs("\t", 0), "app.Run(os.Args)")
@@ -181,16 +195,24 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 
 	fmt.Fprintln(fw, "func", getCamelCase("set_"+prefix+"_values(c *cli.Context) error {"))
 	if prefixOrigin[prefix] == "node" {
-		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetNodeConf()")
+		s := "c"
+		for i := 0; i < prefixDepth[prefix]; i++ {
+			s += ".Parent()"
+		}
+		s += ".String(\"node_id\")"
+		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetNodeConf("+s+")")
 		fmt.Fprintln(fw, "\t", "if err != nil {")
+		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t", "return err")
 		fmt.Fprintln(fw, "\t", "}")
 	} else {
 		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetClusterConf()")
 		fmt.Fprintln(fw, "\t", "if err != nil {")
+		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t", "return err")
 		fmt.Fprintln(fw, "\t", "}")
 	}
+	fmt.Fprintln(fw, nullChecker(prefix2VarName[prefix]+".field"))
 	fmt.Fprintln(cw, tabs(tab, 1), "Flags: []cli.Flag{")
 	/*if prefix == "node" {
 		fmt.Fprintln(cw, tabs(tab, 2), "cli.StringSliceFlag{")
@@ -241,16 +263,19 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 
 	fmt.Fprintln(fw, "func", getCamelCase("show_"+prefix+"_values(c *cli.Context) error {"))
 	if prefixOrigin[prefix] == "node" {
-		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetNodeConf()")
+		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetNodeConf(c.Parent().String(\"node_id\"))")
 		fmt.Fprintln(fw, "\t", "if err != nil {")
+		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t", "return err")
 		fmt.Fprintln(fw, "\t", "}")
 	} else {
 		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetClusterConf()")
 		fmt.Fprintln(fw, "\t", "if err != nil {")
+		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t", "return err")
 		fmt.Fprintln(fw, "\t", "}")
 	}
+	fmt.Fprintln(fw, nullChecker(prefix2VarName[prefix]+".field"))
 	fmt.Fprintln(fw, "\t", "if c.GlobalBool(\"json\") {")
 	fmt.Fprintln(fw, "\t\t", "return printJson("+prefix2VarName[prefix]+")")
 	fmt.Fprintln(fw, "\t", "}")
@@ -295,6 +320,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		config.Storage = new(osdconfig.StorageConfig)
 		prefix2VarName["node"] = "config"
 		prefixOrigin["node"] = "node"
+		prefixDepth["node"] = 0
 		printFields(reflect.Indirect(reflect.ValueOf(config)), false, "node", "node usage", "node description", tabs(tab, 2))
 	}
 
@@ -306,6 +332,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 			if !field.IsNil() && isEnabled(v.Type(), i) {
 				prefix2VarName[getTag(v.Type(), i)] = prefix2VarName[prefix] + "." + v.Type().Field(i).Name
 				prefixOrigin[getTag(v.Type(), i)] = prefixOrigin[prefix]
+				prefixDepth[getTag(v.Type(), i)] = prefixDepth[prefix] + 1
 				printFields(field.Elem(), isHidden(v.Type(), i), getTag(v.Type(), i), getUsage(v.Type(), i), getDescription(v.Type(), i), tabs(tab, 2))
 			}
 		default:
@@ -425,4 +452,17 @@ func getCamelCase(input string) string {
 		}
 	}
 	return string(out)
+}
+
+func nullChecker(input string) string {
+	fields := strings.Split(input, ".")
+	s := ""
+	field := fields[0]
+	for i := 0; i < len(fields)-1; i++ {
+		s += fmt.Sprintln("\t", "if", field, "== nil {\n\t\terr := errors.New(\""+field+"\"+\": object is a nil pointer\")\n\t\tlogrus.Error(err)\n\t\treturn err\n\t}")
+		field += "."
+		field += fields[i+1]
+	}
+
+	return s
 }
