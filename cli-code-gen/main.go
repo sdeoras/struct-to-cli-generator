@@ -119,7 +119,9 @@ func main() {
 	prefix2VarName["config"] = "config"
 	prefixOrigin["config"] = "config"
 	prefixDepth["config"] = 0
-	printFields(reflect.Indirect(reflect.ValueOf(config)), false, "config", "usage", "description", "\t\t")
+	printFields(reflect.Indirect(reflect.ValueOf(config)), false, "config", "Configure cluster",
+		"Configure cluster and nodes. Node ID is required for node configuration. "+
+			"Get node id using pxctl status", "\t\t")
 	fmt.Fprintln(cw, tabs("\t", 0), "}")
 	fmt.Fprintln(cw, tabs("\t", 0), "app.Run(os.Args)")
 	fmt.Fprintln(cw, "}")
@@ -151,7 +153,8 @@ func getFunc(cw, fw *bufio.Writer, v reflect.Value, i int, tab, prefix string) {
 	fmt.Fprintln(cw, tabs(tab, 5), "Name:", "\""+getTag(v.Type(), i)+"\",")
 
 	fmt.Fprintln(fw, "\t", "if c.IsSet(\"all\") || c.IsSet(\""+getTag(v.Type(), i)+"\") {")
-	fmt.Fprintln(fw, "\t\t", "fmt.Println(", "\""+v.Type().Field(i).Name+":\",", prefix2VarName[prefix]+"."+v.Type().Field(i).Name, ")")
+	fmt.Fprintln(fw, "\t\t",
+		"fmt.Println(", "\""+v.Type().Field(i).Name+":\",", prefix2VarName[prefix]+"."+v.Type().Field(i).Name, ")")
 	fmt.Fprintln(fw, "\t", "}")
 
 	fmt.Fprintln(cw, tabs(tab, 5), "Usage: \"(Bool)\\t"+getUsage(v.Type(), i)+"\",")
@@ -172,8 +175,8 @@ func setFunc(cw, fw *bufio.Writer, v reflect.Value, i int, tab, prefix, flagType
 	fmt.Fprintln(cw, tabs(tab, 3), "Name:", "\""+getTag(v.Type(), i)+"\",")
 
 	fmt.Fprintln(fw, "\t", "if c.IsSet(\""+getTag(v.Type(), i)+"\") {")
-	fmt.Fprintln(fw, "\t\t", getCamelCase(getTag(v.Type(), i)), ":=", "c."+flagType+"(\""+getTag(v.Type(), i)+"\")")
-	fmt.Fprintln(fw, "\t\t", prefix2VarName[prefix]+"."+v.Type().Field(i).Name, " = ", getCamelCase(getTag(v.Type(), i)))
+	fmt.Fprintln(fw, "\t\t",
+		prefix2VarName[prefix]+"."+v.Type().Field(i).Name, "=", "c."+flagType+"(\""+getTag(v.Type(), i)+"\")")
 	fmt.Fprintln(fw, "\t", "}")
 
 	fmt.Fprintln(cw, tabs(tab, 3), "Usage: \"("+flagTag+")\\t"+getUsage(v.Type(), i)+"\",")
@@ -199,8 +202,12 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		for i := 0; i < prefixDepth[prefix]; i++ {
 			s += ".Parent()"
 		}
-		s += ".String(\"node_id\")"
-		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetNodeConf("+s+")")
+		fmt.Fprintln(fw, "\t", "if !"+s+".IsSet(\"node_id\") {")
+		fmt.Fprintln(fw, "\t\t", "err := errors.New(\"--node_id must be set\")")
+		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
+		fmt.Fprintln(fw, "\t\t", "return err")
+		fmt.Fprintln(fw, "\t", "}")
+		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetNodeConf("+s+".String(\"node_id\")"+")")
 		fmt.Fprintln(fw, "\t", "if err != nil {")
 		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t", "return err")
@@ -232,7 +239,8 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 			case reflect.TypeOf([]int{}):
 				setFunc(cw, fw, v, i, tab, prefix, "IntSlice", "Int...")
 			default:
-				fmt.Fprintln(os.Stderr, "ignoring", prefix+v.Type().Field(i).Name, "of type", v.Field(i).Type().String())
+				fmt.Fprintln(os.Stderr, "ignoring",
+					prefix+v.Type().Field(i).Name, "of type", v.Field(i).Type().String())
 			}
 		case reflect.String:
 			setFunc(cw, fw, v, i, tab, prefix, "String", "Str")
@@ -263,7 +271,16 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 
 	fmt.Fprintln(fw, "func", getCamelCase("show_"+prefix+"_values(c *cli.Context) error {"))
 	if prefixOrigin[prefix] == "node" {
-		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetNodeConf(c.Parent().String(\"node_id\"))")
+		s := "c.Parent()"
+		for i := 0; i < prefixDepth[prefix]; i++ {
+			s += ".Parent()"
+		}
+		fmt.Fprintln(fw, "\t", "if !"+s+".IsSet(\"node_id\") {")
+		fmt.Fprintln(fw, "\t\t", "err := errors.New(\"--node_id must be set\")")
+		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
+		fmt.Fprintln(fw, "\t\t", "return err")
+		fmt.Fprintln(fw, "\t", "}")
+		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetNodeConf("+s+".String(\"node_id\"))")
 		fmt.Fprintln(fw, "\t", "if err != nil {")
 		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t", "return err")
@@ -295,7 +312,8 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 			case reflect.TypeOf([]int{}):
 				getFunc(cw, fw, v, i, tab, prefix)
 			default:
-				fmt.Fprintln(os.Stderr, "ignoring", prefix+v.Type().Field(i).Name, "of type", v.Field(i).Type().String())
+				fmt.Fprintln(os.Stderr, "ignoring",
+					prefix+v.Type().Field(i).Name, "of type", v.Field(i).Type().String())
 			}
 		case reflect.String:
 			getFunc(cw, fw, v, i, tab, prefix)
@@ -321,7 +339,8 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		prefix2VarName["node"] = "config"
 		prefixOrigin["node"] = "node"
 		prefixDepth["node"] = 0
-		printFields(reflect.Indirect(reflect.ValueOf(config)), false, "node", "node usage", "node description", tabs(tab, 2))
+		printFields(reflect.Indirect(reflect.ValueOf(config)),
+			false, "node", "node usage", "node description", tabs(tab, 2))
 	}
 
 	// subcommand based on nested struct
@@ -333,7 +352,9 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 				prefix2VarName[getTag(v.Type(), i)] = prefix2VarName[prefix] + "." + v.Type().Field(i).Name
 				prefixOrigin[getTag(v.Type(), i)] = prefixOrigin[prefix]
 				prefixDepth[getTag(v.Type(), i)] = prefixDepth[prefix] + 1
-				printFields(field.Elem(), isHidden(v.Type(), i), getTag(v.Type(), i), getUsage(v.Type(), i), getDescription(v.Type(), i), tabs(tab, 2))
+				printFields(field.Elem(),
+					isHidden(v.Type(), i), getTag(v.Type(), i), getUsage(v.Type(), i),
+					getDescription(v.Type(), i), tabs(tab, 2))
 			}
 		default:
 		}
@@ -459,7 +480,10 @@ func nullChecker(input string) string {
 	s := ""
 	field := fields[0]
 	for i := 0; i < len(fields)-1; i++ {
-		s += fmt.Sprintln("\t", "if", field, "== nil {\n\t\terr := errors.New(\""+field+"\"+\": object is a nil pointer\")\n\t\tlogrus.Error(err)\n\t\treturn err\n\t}")
+		s += fmt.Sprintln("\t",
+			"if",
+			field, "== nil {\n\t\terr := errors.New(\""+field+"\"+\": no data found, received nil pointer\")\n"+
+				"\t\tlogrus.Error(err)\n\t\treturn err\n\t}")
 		field += "."
 		field += fields[i+1]
 	}

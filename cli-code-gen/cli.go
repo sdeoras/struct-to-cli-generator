@@ -81,49 +81,49 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:        "config",
-			Usage:       "usage",
-			Description: "description",
+			Usage:       "Configure cluster",
+			Description: "Configure cluster and nodes. Node ID is required for node configuration. Get node id using pxctl status",
 			Hidden:      false,
 			Action:      setConfigValues,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:   "description",
-					Usage:  "(Str)\tusage to be added",
+					Usage:  "(Str)\tCluster description",
 					Hidden: false,
 				},
 				cli.StringFlag{
 					Name:   "mode",
-					Usage:  "(Str)\tusage to be added",
+					Usage:  "(Str)\tMode for cluster",
 					Hidden: false,
 				},
 				cli.StringFlag{
 					Name:   "version",
-					Usage:  "(Str)\tusage to be added",
+					Usage:  "(Str)\tVersion info for cluster",
 					Hidden: false,
 				},
 				cli.StringFlag{
 					Name:   "created",
-					Usage:  "(Str)\tusage to be added",
+					Usage:  "(Str)\tCreation info for cluster",
 					Hidden: false,
 				},
 				cli.StringFlag{
 					Name:   "cluster_id",
-					Usage:  "(Str)\tusage to be added",
+					Usage:  "(Str)\tCluster ID info",
 					Hidden: false,
 				},
 				cli.StringFlag{
 					Name:   "logging_url",
-					Usage:  "(Str)\tusage to be added",
+					Usage:  "(Str)\tURL for logging",
 					Hidden: false,
 				},
 				cli.StringFlag{
 					Name:   "alerting_url",
-					Usage:  "(Str)\tusage to be added",
+					Usage:  "(Str)\tURL for altering",
 					Hidden: false,
 				},
 				cli.StringFlag{
 					Name:   "scheduler",
-					Usage:  "(Str)\tusage to be added",
+					Usage:  "(Str)\tCluster scheduler",
 					Hidden: false,
 				},
 				cli.BoolFlag{
@@ -186,42 +186,42 @@ func main() {
 						},
 						cli.BoolFlag{
 							Name:   "description",
-							Usage:  "(Bool)\tusage to be added",
+							Usage:  "(Bool)\tCluster description",
 							Hidden: false,
 						},
 						cli.BoolFlag{
 							Name:   "mode",
-							Usage:  "(Bool)\tusage to be added",
+							Usage:  "(Bool)\tMode for cluster",
 							Hidden: false,
 						},
 						cli.BoolFlag{
 							Name:   "version",
-							Usage:  "(Bool)\tusage to be added",
+							Usage:  "(Bool)\tVersion info for cluster",
 							Hidden: false,
 						},
 						cli.BoolFlag{
 							Name:   "created",
-							Usage:  "(Bool)\tusage to be added",
+							Usage:  "(Bool)\tCreation info for cluster",
 							Hidden: false,
 						},
 						cli.BoolFlag{
 							Name:   "cluster_id",
-							Usage:  "(Bool)\tusage to be added",
+							Usage:  "(Bool)\tCluster ID info",
 							Hidden: false,
 						},
 						cli.BoolFlag{
 							Name:   "logging_url",
-							Usage:  "(Bool)\tusage to be added",
+							Usage:  "(Bool)\tURL for logging",
 							Hidden: false,
 						},
 						cli.BoolFlag{
 							Name:   "alerting_url",
-							Usage:  "(Bool)\tusage to be added",
+							Usage:  "(Bool)\tURL for altering",
 							Hidden: false,
 						},
 						cli.BoolFlag{
 							Name:   "scheduler",
-							Usage:  "(Bool)\tusage to be added",
+							Usage:  "(Bool)\tCluster scheduler",
 							Hidden: false,
 						},
 						cli.BoolFlag{
@@ -279,8 +279,8 @@ func main() {
 					Action:      setNodeValues,
 					Flags: []cli.Flag{
 						cli.StringFlag{
-							Name:   "id",
-							Usage:  "(Str)\tusage to be added",
+							Name:   "node_id",
+							Usage:  "(Str)\tID for the node",
 							Hidden: false,
 						},
 					},
@@ -297,27 +297,27 @@ func main() {
 									Hidden: false,
 								},
 								cli.BoolFlag{
-									Name:   "id",
-									Usage:  "(Bool)\tusage to be added",
+									Name:   "node_id",
+									Usage:  "(Bool)\tID for the node",
 									Hidden: false,
 								},
 							},
 						},
 						{
 							Name:        "network",
-							Usage:       "usage to be added",
-							Description: "description to be added",
+							Usage:       "Network configuration",
+							Description: "Configure network values for a node",
 							Hidden:      false,
 							Action:      setNetworkValues,
 							Flags: []cli.Flag{
 								cli.StringFlag{
 									Name:   "mgt_iface",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tManagement interface",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "data_iface",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tData interface",
 									Hidden: false,
 								},
 							},
@@ -335,12 +335,12 @@ func main() {
 										},
 										cli.BoolFlag{
 											Name:   "mgt_iface",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tManagement interface",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "data_iface",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tData interface",
 											Hidden: false,
 										},
 									},
@@ -349,34 +349,34 @@ func main() {
 						},
 						{
 							Name:        "storage",
-							Usage:       "usage to be added",
-							Description: "description to be added",
+							Usage:       "Storage configuration",
+							Description: "Configure storage values for a node",
 							Hidden:      false,
 							Action:      setStorageValues,
 							Flags: []cli.Flag{
 								cli.StringSliceFlag{
 									Name:   "devices_md",
-									Usage:  "(Str...)\tusage to be added",
+									Usage:  "(Str...)\tDevices MD",
 									Hidden: false,
 								},
 								cli.StringSliceFlag{
 									Name:   "devices",
-									Usage:  "(Str...)\tusage to be added",
+									Usage:  "(Str...)\tDevices list",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "raid_level",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tRAID level info",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "raid_level_md",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tRAID level MD",
 									Hidden: false,
 								},
 								cli.BoolFlag{
 									Name:   "async_io",
-									Usage:  "(Bool)\tusage to be added",
+									Usage:  "(Bool)\tAsync I/O",
 									Hidden: false,
 								},
 							},
@@ -394,27 +394,27 @@ func main() {
 										},
 										cli.BoolFlag{
 											Name:   "devices_md",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tDevices MD",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "devices",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tDevices list",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "raid_level",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tRAID level info",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "raid_level_md",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tRAID level MD",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "async_io",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tAsync I/O",
 											Hidden: false,
 										},
 									},
@@ -432,12 +432,12 @@ func main() {
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:   "secret_type",
-							Usage:  "(Str)\tusage to be added",
+							Usage:  "(Str)\tSecret type",
 							Hidden: false,
 						},
 						cli.StringFlag{
 							Name:   "cluster_secret_key",
-							Usage:  "(Str)\tusage to be added",
+							Usage:  "(Str)\tSecret key",
 							Hidden: false,
 						},
 					},
@@ -455,66 +455,66 @@ func main() {
 								},
 								cli.BoolFlag{
 									Name:   "secret_type",
-									Usage:  "(Bool)\tusage to be added",
+									Usage:  "(Bool)\tSecret type",
 									Hidden: false,
 								},
 								cli.BoolFlag{
 									Name:   "cluster_secret_key",
-									Usage:  "(Bool)\tusage to be added",
+									Usage:  "(Bool)\tSecret key",
 									Hidden: false,
 								},
 							},
 						},
 						{
 							Name:        "vault",
-							Usage:       "usage to be added",
+							Usage:       "Vault configuration",
 							Description: "none yet",
 							Hidden:      false,
 							Action:      setVaultValues,
 							Flags: []cli.Flag{
 								cli.StringFlag{
 									Name:   "vault_token",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tVault token",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "vault_addr",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tVault address",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "vault_cacert",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tVault CA certificate",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "vault_capath",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tVault CA path",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "vault_client_cert",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tVault client certificate",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "vault_client_key",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tVault client key",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "vault_skip_verify",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tVault skip verification",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "vault_tls_server_name",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tVault TLS server name",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "vault_base_path",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tVault base path",
 									Hidden: false,
 								},
 							},
@@ -532,47 +532,47 @@ func main() {
 										},
 										cli.BoolFlag{
 											Name:   "vault_token",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tVault token",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "vault_addr",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tVault address",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "vault_cacert",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tVault CA certificate",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "vault_capath",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tVault CA path",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "vault_client_cert",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tVault client certificate",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "vault_client_key",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tVault client key",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "vault_skip_verify",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tVault skip verification",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "vault_tls_server_name",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tVault TLS server name",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "vault_base_path",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tVault base path",
 											Hidden: false,
 										},
 									},
@@ -581,34 +581,34 @@ func main() {
 						},
 						{
 							Name:        "aws",
-							Usage:       "usage to be added",
+							Usage:       "AWS configuration",
 							Description: "none yet",
 							Hidden:      false,
 							Action:      setAwsValues,
 							Flags: []cli.Flag{
 								cli.StringFlag{
 									Name:   "aws_access_key_id",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tAWS access key ID",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "aws_secret_access_key",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tAWS secret access key",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "aws_secret_token_key",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tAWS secret token key",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "aws_cmk",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tAWS CMK",
 									Hidden: false,
 								},
 								cli.StringFlag{
 									Name:   "aws_region",
-									Usage:  "(Str)\tusage to be added",
+									Usage:  "(Str)\tAWS region",
 									Hidden: false,
 								},
 							},
@@ -626,27 +626,27 @@ func main() {
 										},
 										cli.BoolFlag{
 											Name:   "aws_access_key_id",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tAWS access key ID",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "aws_secret_access_key",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tAWS secret access key",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "aws_secret_token_key",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tAWS secret token key",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "aws_cmk",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tAWS CMK",
 											Hidden: false,
 										},
 										cli.BoolFlag{
 											Name:   "aws_region",
-											Usage:  "(Bool)\tusage to be added",
+											Usage:  "(Bool)\tAWS region",
 											Hidden: false,
 										},
 									},
@@ -667,78 +667,61 @@ func setConfigValues(c *cli.Context) error {
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 
 	if c.IsSet("description") {
-		description := c.String("description")
-		config.Description = description
+		config.Description = c.String("description")
 	}
 	if c.IsSet("mode") {
-		mode := c.String("mode")
-		config.Mode = mode
+		config.Mode = c.String("mode")
 	}
 	if c.IsSet("version") {
-		version := c.String("version")
-		config.Version = version
+		config.Version = c.String("version")
 	}
 	if c.IsSet("created") {
-		created := c.String("created")
-		config.Created = created
+		config.Created = c.String("created")
 	}
 	if c.IsSet("cluster_id") {
-		clusterId := c.String("cluster_id")
-		config.ClusterId = clusterId
+		config.ClusterId = c.String("cluster_id")
 	}
 	if c.IsSet("logging_url") {
-		loggingUrl := c.String("logging_url")
-		config.LoggingUrl = loggingUrl
+		config.LoggingUrl = c.String("logging_url")
 	}
 	if c.IsSet("alerting_url") {
-		alertingUrl := c.String("alerting_url")
-		config.AlertingUrl = alertingUrl
+		config.AlertingUrl = c.String("alerting_url")
 	}
 	if c.IsSet("scheduler") {
-		scheduler := c.String("scheduler")
-		config.Scheduler = scheduler
+		config.Scheduler = c.String("scheduler")
 	}
 	if c.IsSet("multicontainer") {
-		multicontainer := c.Bool("multicontainer")
-		config.Multicontainer = multicontainer
+		config.Multicontainer = c.Bool("multicontainer")
 	}
 	if c.IsSet("nolh") {
-		nolh := c.Bool("nolh")
-		config.Nolh = nolh
+		config.Nolh = c.Bool("nolh")
 	}
 	if c.IsSet("callhome") {
-		callhome := c.Bool("callhome")
-		config.Callhome = callhome
+		config.Callhome = c.Bool("callhome")
 	}
 	if c.IsSet("bootstrap") {
-		bootstrap := c.Bool("bootstrap")
-		config.Bootstrap = bootstrap
+		config.Bootstrap = c.Bool("bootstrap")
 	}
 	if c.IsSet("tunnel_end_point") {
-		tunnelEndPoint := c.String("tunnel_end_point")
-		config.TunnelEndPoint = tunnelEndPoint
+		config.TunnelEndPoint = c.String("tunnel_end_point")
 	}
 	if c.IsSet("tunnel_certs") {
-		tunnelCerts := c.StringSlice("tunnel_certs")
-		config.TunnelCerts = tunnelCerts
+		config.TunnelCerts = c.StringSlice("tunnel_certs")
 	}
 	if c.IsSet("driver") {
-		driver := c.String("driver")
-		config.Driver = driver
+		config.Driver = c.String("driver")
 	}
 	if c.IsSet("debug_level") {
-		debugLevel := c.String("debug_level")
-		config.DebugLevel = debugLevel
+		config.DebugLevel = c.String("debug_level")
 	}
 	if c.IsSet("domain") {
-		domain := c.String("domain")
-		config.Domain = domain
+		config.Domain = c.String("domain")
 	}
 	return clusterManager.SetClusterConf(config)
 }
@@ -750,7 +733,7 @@ func showConfigValues(c *cli.Context) error {
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
@@ -813,32 +796,41 @@ func showConfigValues(c *cli.Context) error {
 }
 
 func setNodeValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf(c.String("id"))
+	if !c.IsSet("node_id") {
+		err := errors.New("--node_id must be set")
+		logrus.Error(err)
+		return err
+	}
+	config, err := clusterManager.GetNodeConf(c.String("node_id"))
 	if err != nil {
 		logrus.Error(err)
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 
-	if c.IsSet("id") {
-		nodeId := c.String("id")
-		config.NodeId = nodeId
+	if c.IsSet("node_id") {
+		config.NodeId = c.String("node_id")
 	}
 	return clusterManager.SetNodeConf(config)
 }
 
 func showNodeValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf(c.Parent().String("id"))
+	if !c.Parent().IsSet("node_id") {
+		err := errors.New("--node_id must be set")
+		logrus.Error(err)
+		return err
+	}
+	config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
 	if err != nil {
 		logrus.Error(err)
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
@@ -846,53 +838,61 @@ func showNodeValues(c *cli.Context) error {
 	if c.GlobalBool("json") {
 		return printJson(config)
 	}
-	if c.IsSet("all") || c.IsSet("id") {
+	if c.IsSet("all") || c.IsSet("node_id") {
 		fmt.Println("NodeId:", config.NodeId)
 	}
 	return nil
 }
 
 func setNetworkValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf(c.Parent().String("id"))
+	if !c.Parent().IsSet("node_id") {
+		err := errors.New("--node_id must be set")
+		logrus.Error(err)
+		return err
+	}
+	config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
 	if err != nil {
 		logrus.Error(err)
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Network == nil {
-		err := errors.New("config.Network" + ": object is a nil pointer")
+		err := errors.New("config.Network" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 
 	if c.IsSet("mgt_iface") {
-		mgtIface := c.String("mgt_iface")
-		config.Network.MgtIface = mgtIface
+		config.Network.MgtIface = c.String("mgt_iface")
 	}
 	if c.IsSet("data_iface") {
-		dataIface := c.String("data_iface")
-		config.Network.DataIface = dataIface
+		config.Network.DataIface = c.String("data_iface")
 	}
 	return clusterManager.SetNodeConf(config)
 }
 
 func showNetworkValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf(c.Parent().String("id"))
+	if !c.Parent().Parent().IsSet("node_id") {
+		err := errors.New("--node_id must be set")
+		logrus.Error(err)
+		return err
+	}
+	config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
 	if err != nil {
 		logrus.Error(err)
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Network == nil {
-		err := errors.New("config.Network" + ": object is a nil pointer")
+		err := errors.New("config.Network" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
@@ -910,58 +910,63 @@ func showNetworkValues(c *cli.Context) error {
 }
 
 func setStorageValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf(c.Parent().String("id"))
+	if !c.Parent().IsSet("node_id") {
+		err := errors.New("--node_id must be set")
+		logrus.Error(err)
+		return err
+	}
+	config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
 	if err != nil {
 		logrus.Error(err)
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Storage == nil {
-		err := errors.New("config.Storage" + ": object is a nil pointer")
+		err := errors.New("config.Storage" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 
 	if c.IsSet("devices_md") {
-		devicesMd := c.StringSlice("devices_md")
-		config.Storage.DevicesMd = devicesMd
+		config.Storage.DevicesMd = c.StringSlice("devices_md")
 	}
 	if c.IsSet("devices") {
-		devices := c.StringSlice("devices")
-		config.Storage.Devices = devices
+		config.Storage.Devices = c.StringSlice("devices")
 	}
 	if c.IsSet("raid_level") {
-		raidLevel := c.String("raid_level")
-		config.Storage.RaidLevel = raidLevel
+		config.Storage.RaidLevel = c.String("raid_level")
 	}
 	if c.IsSet("raid_level_md") {
-		raidLevelMd := c.String("raid_level_md")
-		config.Storage.RaidLevelMd = raidLevelMd
+		config.Storage.RaidLevelMd = c.String("raid_level_md")
 	}
 	if c.IsSet("async_io") {
-		asyncIo := c.Bool("async_io")
-		config.Storage.AsyncIo = asyncIo
+		config.Storage.AsyncIo = c.Bool("async_io")
 	}
 	return clusterManager.SetNodeConf(config)
 }
 
 func showStorageValues(c *cli.Context) error {
-	config, err := clusterManager.GetNodeConf(c.Parent().String("id"))
+	if !c.Parent().Parent().IsSet("node_id") {
+		err := errors.New("--node_id must be set")
+		logrus.Error(err)
+		return err
+	}
+	config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
 	if err != nil {
 		logrus.Error(err)
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Storage == nil {
-		err := errors.New("config.Storage" + ": object is a nil pointer")
+		err := errors.New("config.Storage" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
@@ -994,23 +999,21 @@ func setSecretsValues(c *cli.Context) error {
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Secrets == nil {
-		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		err := errors.New("config.Secrets" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 
 	if c.IsSet("secret_type") {
-		secretType := c.String("secret_type")
-		config.Secrets.SecretType = secretType
+		config.Secrets.SecretType = c.String("secret_type")
 	}
 	if c.IsSet("cluster_secret_key") {
-		clusterSecretKey := c.String("cluster_secret_key")
-		config.Secrets.ClusterSecretKey = clusterSecretKey
+		config.Secrets.ClusterSecretKey = c.String("cluster_secret_key")
 	}
 	return clusterManager.SetClusterConf(config)
 }
@@ -1022,12 +1025,12 @@ func showSecretsValues(c *cli.Context) error {
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Secrets == nil {
-		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		err := errors.New("config.Secrets" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
@@ -1051,56 +1054,47 @@ func setVaultValues(c *cli.Context) error {
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Secrets == nil {
-		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		err := errors.New("config.Secrets" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Secrets.Vault == nil {
-		err := errors.New("config.Secrets.Vault" + ": object is a nil pointer")
+		err := errors.New("config.Secrets.Vault" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 
 	if c.IsSet("vault_token") {
-		vaultToken := c.String("vault_token")
-		config.Secrets.Vault.VaultToken = vaultToken
+		config.Secrets.Vault.VaultToken = c.String("vault_token")
 	}
 	if c.IsSet("vault_addr") {
-		vaultAddr := c.String("vault_addr")
-		config.Secrets.Vault.VaultAddr = vaultAddr
+		config.Secrets.Vault.VaultAddr = c.String("vault_addr")
 	}
 	if c.IsSet("vault_cacert") {
-		vaultCacert := c.String("vault_cacert")
-		config.Secrets.Vault.VaultCacert = vaultCacert
+		config.Secrets.Vault.VaultCacert = c.String("vault_cacert")
 	}
 	if c.IsSet("vault_capath") {
-		vaultCapath := c.String("vault_capath")
-		config.Secrets.Vault.VaultCapath = vaultCapath
+		config.Secrets.Vault.VaultCapath = c.String("vault_capath")
 	}
 	if c.IsSet("vault_client_cert") {
-		vaultClientCert := c.String("vault_client_cert")
-		config.Secrets.Vault.VaultClientCert = vaultClientCert
+		config.Secrets.Vault.VaultClientCert = c.String("vault_client_cert")
 	}
 	if c.IsSet("vault_client_key") {
-		vaultClientKey := c.String("vault_client_key")
-		config.Secrets.Vault.VaultClientKey = vaultClientKey
+		config.Secrets.Vault.VaultClientKey = c.String("vault_client_key")
 	}
 	if c.IsSet("vault_skip_verify") {
-		vaultSkipVerify := c.String("vault_skip_verify")
-		config.Secrets.Vault.VaultSkipVerify = vaultSkipVerify
+		config.Secrets.Vault.VaultSkipVerify = c.String("vault_skip_verify")
 	}
 	if c.IsSet("vault_tls_server_name") {
-		vaultTlsServerName := c.String("vault_tls_server_name")
-		config.Secrets.Vault.VaultTlsServerName = vaultTlsServerName
+		config.Secrets.Vault.VaultTlsServerName = c.String("vault_tls_server_name")
 	}
 	if c.IsSet("vault_base_path") {
-		vaultBasePath := c.String("vault_base_path")
-		config.Secrets.Vault.VaultBasePath = vaultBasePath
+		config.Secrets.Vault.VaultBasePath = c.String("vault_base_path")
 	}
 	return clusterManager.SetClusterConf(config)
 }
@@ -1112,17 +1106,17 @@ func showVaultValues(c *cli.Context) error {
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Secrets == nil {
-		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		err := errors.New("config.Secrets" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Secrets.Vault == nil {
-		err := errors.New("config.Secrets.Vault" + ": object is a nil pointer")
+		err := errors.New("config.Secrets.Vault" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
@@ -1167,40 +1161,35 @@ func setAwsValues(c *cli.Context) error {
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Secrets == nil {
-		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		err := errors.New("config.Secrets" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Secrets.Aws == nil {
-		err := errors.New("config.Secrets.Aws" + ": object is a nil pointer")
+		err := errors.New("config.Secrets.Aws" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 
 	if c.IsSet("aws_access_key_id") {
-		awsAccessKeyId := c.String("aws_access_key_id")
-		config.Secrets.Aws.AwsAccessKeyId = awsAccessKeyId
+		config.Secrets.Aws.AwsAccessKeyId = c.String("aws_access_key_id")
 	}
 	if c.IsSet("aws_secret_access_key") {
-		awsSecretAccessKey := c.String("aws_secret_access_key")
-		config.Secrets.Aws.AwsSecretAccessKey = awsSecretAccessKey
+		config.Secrets.Aws.AwsSecretAccessKey = c.String("aws_secret_access_key")
 	}
 	if c.IsSet("aws_secret_token_key") {
-		awsSecretTokenKey := c.String("aws_secret_token_key")
-		config.Secrets.Aws.AwsSecretTokenKey = awsSecretTokenKey
+		config.Secrets.Aws.AwsSecretTokenKey = c.String("aws_secret_token_key")
 	}
 	if c.IsSet("aws_cmk") {
-		awsCmk := c.String("aws_cmk")
-		config.Secrets.Aws.AwsCmk = awsCmk
+		config.Secrets.Aws.AwsCmk = c.String("aws_cmk")
 	}
 	if c.IsSet("aws_region") {
-		awsRegion := c.String("aws_region")
-		config.Secrets.Aws.AwsRegion = awsRegion
+		config.Secrets.Aws.AwsRegion = c.String("aws_region")
 	}
 	return clusterManager.SetClusterConf(config)
 }
@@ -1212,17 +1201,17 @@ func showAwsValues(c *cli.Context) error {
 		return err
 	}
 	if config == nil {
-		err := errors.New("config" + ": object is a nil pointer")
+		err := errors.New("config" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Secrets == nil {
-		err := errors.New("config.Secrets" + ": object is a nil pointer")
+		err := errors.New("config.Secrets" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
 	if config.Secrets.Aws == nil {
-		err := errors.New("config.Secrets.Aws" + ": object is a nil pointer")
+		err := errors.New("config.Secrets.Aws" + ": no data found, received nil pointer")
 		logrus.Error(err)
 		return err
 	}
