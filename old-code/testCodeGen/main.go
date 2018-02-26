@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/urfave/cli"
 	"os"
+
+	"github.com/urfave/cli"
 )
 
 func main() {
@@ -10,104 +11,104 @@ func main() {
 	app.Commands = []cli.Command{
 
 		{
-			Name: "config",
-			Usage: "To be added",
+			Name:        "config",
+			Usage:       "To be added",
 			Description: "To be added",
 			Subcommands: []cli.Command{
 				{
-					Name: "Secrets",
-					Usage: "To be added",
+					Name:        "Secrets",
+					Usage:       "To be added",
 					Description: "To be added",
 					Subcommands: []cli.Command{
 						{
-							Name: "Vault",
-							Usage: "To be added",
+							Name:        "Vault",
+							Usage:       "To be added",
 							Description: "To be added",
 							Subcommands: []cli.Command{
 								{
-									Name: "get",
-									Usage: "Get values",
+									Name:        "get",
+									Usage:       "Get values",
 									Description: "Get values",
-									Action: get_Vault_values,
+									Action:      get_Vault_values,
 									Flags: []cli.Flag{
 										cli.BoolFlag{
-											Name: "VaultToken",
+											Name:  "VaultToken",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "VaultAddr",
+											Name:  "VaultAddr",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "VaultCacert",
+											Name:  "VaultCacert",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "VaultCapath",
+											Name:  "VaultCapath",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "VaultClientCert",
+											Name:  "VaultClientCert",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "VaultClientKey",
+											Name:  "VaultClientKey",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "VaultSkipVerify",
+											Name:  "VaultSkipVerify",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "VaultTlsServerName",
+											Name:  "VaultTlsServerName",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "VaultBasePath",
+											Name:  "VaultBasePath",
 											Usage: "(Bool)\tTo be added",
 										},
 									},
 								},
 								{
-									Name: "set",
-									Usage: "Set values",
+									Name:        "set",
+									Usage:       "Set values",
 									Description: "Set values",
-									Action: set_Vault_values,
+									Action:      set_Vault_values,
 									Flags: []cli.Flag{
 										cli.StringFlag{
-											Name: "VaultToken",
+											Name:  "VaultToken",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "VaultAddr",
+											Name:  "VaultAddr",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "VaultCacert",
+											Name:  "VaultCacert",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "VaultCapath",
+											Name:  "VaultCapath",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "VaultClientCert",
+											Name:  "VaultClientCert",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "VaultClientKey",
+											Name:  "VaultClientKey",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "VaultSkipVerify",
+											Name:  "VaultSkipVerify",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "VaultTlsServerName",
+											Name:  "VaultTlsServerName",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "VaultBasePath",
+											Name:  "VaultBasePath",
 											Usage: "(Str)\tTo be added",
 										},
 									},
@@ -115,62 +116,62 @@ func main() {
 							},
 						},
 						{
-							Name: "Aws",
-							Usage: "To be added",
+							Name:        "Aws",
+							Usage:       "To be added",
 							Description: "To be added",
 							Subcommands: []cli.Command{
 								{
-									Name: "get",
-									Usage: "Get values",
+									Name:        "get",
+									Usage:       "Get values",
 									Description: "Get values",
-									Action: get_Aws_values,
+									Action:      get_Aws_values,
 									Flags: []cli.Flag{
 										cli.BoolFlag{
-											Name: "AwsAccessKeyId",
+											Name:  "AwsAccessKeyId",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "AwsSecretAccessKey",
+											Name:  "AwsSecretAccessKey",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "AwsSecretTokenKey",
+											Name:  "AwsSecretTokenKey",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "AwsCmk",
+											Name:  "AwsCmk",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "AwsRegion",
+											Name:  "AwsRegion",
 											Usage: "(Bool)\tTo be added",
 										},
 									},
 								},
 								{
-									Name: "set",
-									Usage: "Set values",
+									Name:        "set",
+									Usage:       "Set values",
 									Description: "Set values",
-									Action: set_Aws_values,
+									Action:      set_Aws_values,
 									Flags: []cli.Flag{
 										cli.StringFlag{
-											Name: "AwsAccessKeyId",
+											Name:  "AwsAccessKeyId",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "AwsSecretAccessKey",
+											Name:  "AwsSecretAccessKey",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "AwsSecretTokenKey",
+											Name:  "AwsSecretTokenKey",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "AwsCmk",
+											Name:  "AwsCmk",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "AwsRegion",
+											Name:  "AwsRegion",
 											Usage: "(Str)\tTo be added",
 										},
 									},
@@ -178,33 +179,33 @@ func main() {
 							},
 						},
 						{
-							Name: "get",
-							Usage: "Get values",
+							Name:        "get",
+							Usage:       "Get values",
 							Description: "Get values",
-							Action: get_Secrets_values,
+							Action:      get_Secrets_values,
 							Flags: []cli.Flag{
 								cli.BoolFlag{
-									Name: "SecretType",
+									Name:  "SecretType",
 									Usage: "(Bool)\tTo be added",
 								},
 								cli.BoolFlag{
-									Name: "ClusterSecretKey",
+									Name:  "ClusterSecretKey",
 									Usage: "(Bool)\tTo be added",
 								},
 							},
 						},
 						{
-							Name: "set",
-							Usage: "Set values",
+							Name:        "set",
+							Usage:       "Set values",
 							Description: "Set values",
-							Action: set_Secrets_values,
+							Action:      set_Secrets_values,
 							Flags: []cli.Flag{
 								cli.StringFlag{
-									Name: "SecretType",
+									Name:  "SecretType",
 									Usage: "(Str)\tTo be added",
 								},
 								cli.StringFlag{
-									Name: "ClusterSecretKey",
+									Name:  "ClusterSecretKey",
 									Usage: "(Str)\tTo be added",
 								},
 							},
@@ -212,86 +213,86 @@ func main() {
 					},
 				},
 				{
-					Name: "Kvdb",
-					Usage: "To be added",
+					Name:        "Kvdb",
+					Usage:       "To be added",
 					Description: "To be added",
 					Subcommands: []cli.Command{
 						{
-							Name: "get",
-							Usage: "Get values",
+							Name:        "get",
+							Usage:       "Get values",
 							Description: "Get values",
-							Action: get_Kvdb_values,
+							Action:      get_Kvdb_values,
 							Flags: []cli.Flag{
 								cli.BoolFlag{
-									Name: "Username",
+									Name:  "Username",
 									Usage: "(Bool)\tTo be added",
 								},
 								cli.BoolFlag{
-									Name: "Password",
+									Name:  "Password",
 									Usage: "(Bool)\tTo be added",
 								},
 								cli.BoolFlag{
-									Name: "CaFile",
+									Name:  "CaFile",
 									Usage: "(Bool)\tTo be added",
 								},
 								cli.BoolFlag{
-									Name: "CertFile",
+									Name:  "CertFile",
 									Usage: "(Bool)\tTo be added",
 								},
 								cli.BoolFlag{
-									Name: "TrustedCaFile",
+									Name:  "TrustedCaFile",
 									Usage: "(Bool)\tTo be added",
 								},
 								cli.BoolFlag{
-									Name: "ClientCertAuth",
+									Name:  "ClientCertAuth",
 									Usage: "(Bool)\tTo be added",
 								},
 								cli.BoolFlag{
-									Name: "AclToken",
+									Name:  "AclToken",
 									Usage: "(Bool)\tTo be added",
 								},
 								cli.BoolFlag{
-									Name: "KvdbAddr",
+									Name:  "KvdbAddr",
 									Usage: "(Bool)\tTo be added",
 								},
 							},
 						},
 						{
-							Name: "set",
-							Usage: "Set values",
+							Name:        "set",
+							Usage:       "Set values",
 							Description: "Set values",
-							Action: set_Kvdb_values,
+							Action:      set_Kvdb_values,
 							Flags: []cli.Flag{
 								cli.StringFlag{
-									Name: "Username",
+									Name:  "Username",
 									Usage: "(Str)\tTo be added",
 								},
 								cli.StringFlag{
-									Name: "Password",
+									Name:  "Password",
 									Usage: "(Str)\tTo be added",
 								},
 								cli.StringFlag{
-									Name: "CaFile",
+									Name:  "CaFile",
 									Usage: "(Str)\tTo be added",
 								},
 								cli.StringFlag{
-									Name: "CertFile",
+									Name:  "CertFile",
 									Usage: "(Str)\tTo be added",
 								},
 								cli.StringFlag{
-									Name: "TrustedCaFile",
+									Name:  "TrustedCaFile",
 									Usage: "(Str)\tTo be added",
 								},
 								cli.StringFlag{
-									Name: "ClientCertAuth",
+									Name:  "ClientCertAuth",
 									Usage: "(Str)\tTo be added",
 								},
 								cli.StringFlag{
-									Name: "AclToken",
+									Name:  "AclToken",
 									Usage: "(Str)\tTo be added",
 								},
 								cli.StringSliceFlag{
-									Name: "KvdbAddr",
+									Name:  "KvdbAddr",
 									Usage: "(Str...)\tTo be added",
 								},
 							},
@@ -299,43 +300,43 @@ func main() {
 					},
 				},
 				{
-					Name: "node",
-					Usage: "To be added",
+					Name:        "node",
+					Usage:       "To be added",
 					Description: "To be added",
 					Subcommands: []cli.Command{
 						{
-							Name: "Network",
-							Usage: "To be added",
+							Name:        "Network",
+							Usage:       "To be added",
 							Description: "To be added",
 							Subcommands: []cli.Command{
 								{
-									Name: "get",
-									Usage: "Get values",
+									Name:        "get",
+									Usage:       "Get values",
 									Description: "Get values",
-									Action: get_Network_values,
+									Action:      get_Network_values,
 									Flags: []cli.Flag{
 										cli.BoolFlag{
-											Name: "MgtIface",
+											Name:  "MgtIface",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "DataIface",
+											Name:  "DataIface",
 											Usage: "(Bool)\tTo be added",
 										},
 									},
 								},
 								{
-									Name: "set",
-									Usage: "Set values",
+									Name:        "set",
+									Usage:       "Set values",
 									Description: "Set values",
-									Action: set_Network_values,
+									Action:      set_Network_values,
 									Flags: []cli.Flag{
 										cli.StringFlag{
-											Name: "MgtIface",
+											Name:  "MgtIface",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "DataIface",
+											Name:  "DataIface",
 											Usage: "(Str)\tTo be added",
 										},
 									},
@@ -343,62 +344,62 @@ func main() {
 							},
 						},
 						{
-							Name: "Storage",
-							Usage: "To be added",
+							Name:        "Storage",
+							Usage:       "To be added",
 							Description: "To be added",
 							Subcommands: []cli.Command{
 								{
-									Name: "get",
-									Usage: "Get values",
+									Name:        "get",
+									Usage:       "Get values",
 									Description: "Get values",
-									Action: get_Storage_values,
+									Action:      get_Storage_values,
 									Flags: []cli.Flag{
 										cli.BoolFlag{
-											Name: "DevicesMd",
+											Name:  "DevicesMd",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "Devices",
+											Name:  "Devices",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "RaidLevel",
+											Name:  "RaidLevel",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "RaidLevelMd",
+											Name:  "RaidLevelMd",
 											Usage: "(Bool)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "AsyncIo",
+											Name:  "AsyncIo",
 											Usage: "(Bool)\tTo be added",
 										},
 									},
 								},
 								{
-									Name: "set",
-									Usage: "Set values",
+									Name:        "set",
+									Usage:       "Set values",
 									Description: "Set values",
-									Action: set_Storage_values,
+									Action:      set_Storage_values,
 									Flags: []cli.Flag{
 										cli.StringSliceFlag{
-											Name: "DevicesMd",
+											Name:  "DevicesMd",
 											Usage: "(Str...)\tTo be added",
 										},
 										cli.StringSliceFlag{
-											Name: "Devices",
+											Name:  "Devices",
 											Usage: "(Str...)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "RaidLevel",
+											Name:  "RaidLevel",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.StringFlag{
-											Name: "RaidLevelMd",
+											Name:  "RaidLevelMd",
 											Usage: "(Str)\tTo be added",
 										},
 										cli.BoolFlag{
-											Name: "AsyncIo",
+											Name:  "AsyncIo",
 											Usage: "(Bool)\tTo be added",
 										},
 									},
@@ -406,25 +407,25 @@ func main() {
 							},
 						},
 						{
-							Name: "get",
-							Usage: "Get values",
+							Name:        "get",
+							Usage:       "Get values",
 							Description: "Get values",
-							Action: get_node_values,
+							Action:      get_node_values,
 							Flags: []cli.Flag{
 								cli.BoolFlag{
-									Name: "NodeId",
+									Name:  "NodeId",
 									Usage: "(Bool)\tTo be added",
 								},
 							},
 						},
 						{
-							Name: "set",
-							Usage: "Set values",
+							Name:        "set",
+							Usage:       "Set values",
 							Description: "Set values",
-							Action: set_node_values,
+							Action:      set_node_values,
 							Flags: []cli.Flag{
 								cli.StringFlag{
-									Name: "NodeId",
+									Name:  "NodeId",
 									Usage: "(Str)\tTo be added",
 								},
 							},
@@ -432,159 +433,159 @@ func main() {
 					},
 					Flags: []cli.Flag{
 						cli.StringSliceFlag{
-							Name: "id",
+							Name:  "id",
 							Usage: "(Str...)\tNode id",
 						},
 					},
 				},
 				{
-					Name: "get",
-					Usage: "Get values",
+					Name:        "get",
+					Usage:       "Get values",
 					Description: "Get values",
-					Action: get_config_values,
+					Action:      get_config_values,
 					Flags: []cli.Flag{
 						cli.BoolFlag{
-							Name: "Description",
+							Name:  "Description",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Mode",
+							Name:  "Mode",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Version",
+							Name:  "Version",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Created",
+							Name:  "Created",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "ClusterId",
+							Name:  "ClusterId",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "LoggingUrl",
+							Name:  "LoggingUrl",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "AlertingUrl",
+							Name:  "AlertingUrl",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Scheduler",
+							Name:  "Scheduler",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Multicontainer",
+							Name:  "Multicontainer",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Nolh",
+							Name:  "Nolh",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Callhome",
+							Name:  "Callhome",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Bootstrap",
+							Name:  "Bootstrap",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "TunnelEndPoint",
+							Name:  "TunnelEndPoint",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "TunnelCerts",
+							Name:  "TunnelCerts",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Driver",
+							Name:  "Driver",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "DebugLevel",
+							Name:  "DebugLevel",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Domain",
+							Name:  "Domain",
 							Usage: "(Bool)\tTo be added",
 						},
 					},
 				},
 				{
-					Name: "set",
-					Usage: "Set values",
+					Name:        "set",
+					Usage:       "Set values",
 					Description: "Set values",
-					Action: set_config_values,
+					Action:      set_config_values,
 					Flags: []cli.Flag{
 						cli.StringFlag{
-							Name: "Description",
+							Name:  "Description",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "Mode",
+							Name:  "Mode",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "Version",
+							Name:  "Version",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "Created",
+							Name:  "Created",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "ClusterId",
+							Name:  "ClusterId",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "LoggingUrl",
+							Name:  "LoggingUrl",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "AlertingUrl",
+							Name:  "AlertingUrl",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "Scheduler",
+							Name:  "Scheduler",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Multicontainer",
+							Name:  "Multicontainer",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Nolh",
+							Name:  "Nolh",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Callhome",
+							Name:  "Callhome",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.BoolFlag{
-							Name: "Bootstrap",
+							Name:  "Bootstrap",
 							Usage: "(Bool)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "TunnelEndPoint",
+							Name:  "TunnelEndPoint",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.StringSliceFlag{
-							Name: "TunnelCerts",
+							Name:  "TunnelCerts",
 							Usage: "(Str...)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "Driver",
+							Name:  "Driver",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "DebugLevel",
+							Name:  "DebugLevel",
 							Usage: "(Str)\tTo be added",
 						},
 						cli.StringFlag{
-							Name: "Domain",
+							Name:  "Domain",
 							Usage: "(Str)\tTo be added",
 						},
 					},
@@ -594,19 +595,19 @@ func main() {
 	}
 	app.Run(os.Args)
 }
-func get_Secrets_values (c *cli.Context) {}
-func set_Secrets_values (c *cli.Context) {}
-func get_Kvdb_values (c *cli.Context) {}
-func set_Kvdb_values (c *cli.Context) {}
-func get_Network_values (c *cli.Context) {}
-func set_Network_values (c *cli.Context) {}
-func get_Storage_values (c *cli.Context) {}
-func set_Storage_values (c *cli.Context) {}
-func get_node_values (c *cli.Context) {}
-func set_node_values (c *cli.Context) {}
-func get_config_values (c *cli.Context) {}
-func set_config_values (c *cli.Context) {}
-func get_Vault_values (c *cli.Context) {}
-func set_Vault_values (c *cli.Context) {}
-func get_Aws_values (c *cli.Context) {}
-func set_Aws_values (c *cli.Context) {}
+func get_Secrets_values(c *cli.Context) {}
+func set_Secrets_values(c *cli.Context) {}
+func get_Kvdb_values(c *cli.Context)    {}
+func set_Kvdb_values(c *cli.Context)    {}
+func get_Network_values(c *cli.Context) {}
+func set_Network_values(c *cli.Context) {}
+func get_Storage_values(c *cli.Context) {}
+func set_Storage_values(c *cli.Context) {}
+func get_node_values(c *cli.Context)    {}
+func set_node_values(c *cli.Context)    {}
+func get_config_values(c *cli.Context)  {}
+func set_config_values(c *cli.Context)  {}
+func get_Vault_values(c *cli.Context)   {}
+func set_Vault_values(c *cli.Context)   {}
+func get_Aws_values(c *cli.Context)     {}
+func set_Aws_values(c *cli.Context)     {}

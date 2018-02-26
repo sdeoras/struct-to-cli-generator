@@ -111,6 +111,11 @@ func main() {
 					Usage:  "(Str)\tCluster ID info",
 					Hidden: false,
 				},
+				cli.StringSliceFlag{
+					Name:   "node_id",
+					Usage:  "(Str...)\tNode ID info",
+					Hidden: false,
+				},
 				cli.StringFlag{
 					Name:   "logging_url",
 					Usage:  "(Str)\tURL for logging",
@@ -207,6 +212,11 @@ func main() {
 						cli.BoolFlag{
 							Name:   "cluster_id",
 							Usage:  "(Bool)\tCluster ID info",
+							Hidden: false,
+						},
+						cli.BoolFlag{
+							Name:   "node_id",
+							Usage:  "(Bool)\tNode ID info",
 							Hidden: false,
 						},
 						cli.BoolFlag{
@@ -687,6 +697,9 @@ func setConfigValues(c *cli.Context) error {
 	if c.IsSet("cluster_id") {
 		config.ClusterId = c.String("cluster_id")
 	}
+	if c.IsSet("node_id") {
+		config.NodeId = c.StringSlice("node_id")
+	}
 	if c.IsSet("logging_url") {
 		config.LoggingUrl = c.String("logging_url")
 	}
@@ -742,55 +755,58 @@ func showConfigValues(c *cli.Context) error {
 		return printJson(config)
 	}
 	if c.IsSet("all") || c.IsSet("description") {
-		fmt.Println("Description:", config.Description)
+		fmt.Println("description:", config.Description)
 	}
 	if c.IsSet("all") || c.IsSet("mode") {
-		fmt.Println("Mode:", config.Mode)
+		fmt.Println("mode:", config.Mode)
 	}
 	if c.IsSet("all") || c.IsSet("version") {
-		fmt.Println("Version:", config.Version)
+		fmt.Println("version:", config.Version)
 	}
 	if c.IsSet("all") || c.IsSet("created") {
-		fmt.Println("Created:", config.Created)
+		fmt.Println("created:", config.Created)
 	}
 	if c.IsSet("all") || c.IsSet("cluster_id") {
-		fmt.Println("ClusterId:", config.ClusterId)
+		fmt.Println("cluster_id:", config.ClusterId)
+	}
+	if c.IsSet("all") || c.IsSet("node_id") {
+		fmt.Println("node_id:", config.NodeId)
 	}
 	if c.IsSet("all") || c.IsSet("logging_url") {
-		fmt.Println("LoggingUrl:", config.LoggingUrl)
+		fmt.Println("logging_url:", config.LoggingUrl)
 	}
 	if c.IsSet("all") || c.IsSet("alerting_url") {
-		fmt.Println("AlertingUrl:", config.AlertingUrl)
+		fmt.Println("alerting_url:", config.AlertingUrl)
 	}
 	if c.IsSet("all") || c.IsSet("scheduler") {
-		fmt.Println("Scheduler:", config.Scheduler)
+		fmt.Println("scheduler:", config.Scheduler)
 	}
 	if c.IsSet("all") || c.IsSet("multicontainer") {
-		fmt.Println("Multicontainer:", config.Multicontainer)
+		fmt.Println("multicontainer:", config.Multicontainer)
 	}
 	if c.IsSet("all") || c.IsSet("nolh") {
-		fmt.Println("Nolh:", config.Nolh)
+		fmt.Println("nolh:", config.Nolh)
 	}
 	if c.IsSet("all") || c.IsSet("callhome") {
-		fmt.Println("Callhome:", config.Callhome)
+		fmt.Println("callhome:", config.Callhome)
 	}
 	if c.IsSet("all") || c.IsSet("bootstrap") {
-		fmt.Println("Bootstrap:", config.Bootstrap)
+		fmt.Println("bootstrap:", config.Bootstrap)
 	}
 	if c.IsSet("all") || c.IsSet("tunnel_end_point") {
-		fmt.Println("TunnelEndPoint:", config.TunnelEndPoint)
+		fmt.Println("tunnel_end_point:", config.TunnelEndPoint)
 	}
 	if c.IsSet("all") || c.IsSet("tunnel_certs") {
-		fmt.Println("TunnelCerts:", config.TunnelCerts)
+		fmt.Println("tunnel_certs:", config.TunnelCerts)
 	}
 	if c.IsSet("all") || c.IsSet("driver") {
-		fmt.Println("Driver:", config.Driver)
+		fmt.Println("driver:", config.Driver)
 	}
 	if c.IsSet("all") || c.IsSet("debug_level") {
-		fmt.Println("DebugLevel:", config.DebugLevel)
+		fmt.Println("debug_level:", config.DebugLevel)
 	}
 	if c.IsSet("all") || c.IsSet("domain") {
-		fmt.Println("Domain:", config.Domain)
+		fmt.Println("domain:", config.Domain)
 	}
 	return nil
 }
@@ -839,7 +855,7 @@ func showNodeValues(c *cli.Context) error {
 		return printJson(config)
 	}
 	if c.IsSet("all") || c.IsSet("node_id") {
-		fmt.Println("NodeId:", config.NodeId)
+		fmt.Println("node_id:", config.NodeId)
 	}
 	return nil
 }
@@ -901,10 +917,10 @@ func showNetworkValues(c *cli.Context) error {
 		return printJson(config.Network)
 	}
 	if c.IsSet("all") || c.IsSet("mgt_iface") {
-		fmt.Println("MgtIface:", config.Network.MgtIface)
+		fmt.Println("mgt_iface:", config.Network.MgtIface)
 	}
 	if c.IsSet("all") || c.IsSet("data_iface") {
-		fmt.Println("DataIface:", config.Network.DataIface)
+		fmt.Println("data_iface:", config.Network.DataIface)
 	}
 	return nil
 }
@@ -975,19 +991,19 @@ func showStorageValues(c *cli.Context) error {
 		return printJson(config.Storage)
 	}
 	if c.IsSet("all") || c.IsSet("devices_md") {
-		fmt.Println("DevicesMd:", config.Storage.DevicesMd)
+		fmt.Println("devices_md:", config.Storage.DevicesMd)
 	}
 	if c.IsSet("all") || c.IsSet("devices") {
-		fmt.Println("Devices:", config.Storage.Devices)
+		fmt.Println("devices:", config.Storage.Devices)
 	}
 	if c.IsSet("all") || c.IsSet("raid_level") {
-		fmt.Println("RaidLevel:", config.Storage.RaidLevel)
+		fmt.Println("raid_level:", config.Storage.RaidLevel)
 	}
 	if c.IsSet("all") || c.IsSet("raid_level_md") {
-		fmt.Println("RaidLevelMd:", config.Storage.RaidLevelMd)
+		fmt.Println("raid_level_md:", config.Storage.RaidLevelMd)
 	}
 	if c.IsSet("all") || c.IsSet("async_io") {
-		fmt.Println("AsyncIo:", config.Storage.AsyncIo)
+		fmt.Println("async_io:", config.Storage.AsyncIo)
 	}
 	return nil
 }
@@ -1039,10 +1055,10 @@ func showSecretsValues(c *cli.Context) error {
 		return printJson(config.Secrets)
 	}
 	if c.IsSet("all") || c.IsSet("secret_type") {
-		fmt.Println("SecretType:", config.Secrets.SecretType)
+		fmt.Println("secret_type:", config.Secrets.SecretType)
 	}
 	if c.IsSet("all") || c.IsSet("cluster_secret_key") {
-		fmt.Println("ClusterSecretKey:", config.Secrets.ClusterSecretKey)
+		fmt.Println("cluster_secret_key:", config.Secrets.ClusterSecretKey)
 	}
 	return nil
 }
@@ -1125,31 +1141,31 @@ func showVaultValues(c *cli.Context) error {
 		return printJson(config.Secrets.Vault)
 	}
 	if c.IsSet("all") || c.IsSet("vault_token") {
-		fmt.Println("VaultToken:", config.Secrets.Vault.VaultToken)
+		fmt.Println("vault_token:", config.Secrets.Vault.VaultToken)
 	}
 	if c.IsSet("all") || c.IsSet("vault_addr") {
-		fmt.Println("VaultAddr:", config.Secrets.Vault.VaultAddr)
+		fmt.Println("vault_addr:", config.Secrets.Vault.VaultAddr)
 	}
 	if c.IsSet("all") || c.IsSet("vault_cacert") {
-		fmt.Println("VaultCacert:", config.Secrets.Vault.VaultCacert)
+		fmt.Println("vault_cacert:", config.Secrets.Vault.VaultCacert)
 	}
 	if c.IsSet("all") || c.IsSet("vault_capath") {
-		fmt.Println("VaultCapath:", config.Secrets.Vault.VaultCapath)
+		fmt.Println("vault_capath:", config.Secrets.Vault.VaultCapath)
 	}
 	if c.IsSet("all") || c.IsSet("vault_client_cert") {
-		fmt.Println("VaultClientCert:", config.Secrets.Vault.VaultClientCert)
+		fmt.Println("vault_client_cert:", config.Secrets.Vault.VaultClientCert)
 	}
 	if c.IsSet("all") || c.IsSet("vault_client_key") {
-		fmt.Println("VaultClientKey:", config.Secrets.Vault.VaultClientKey)
+		fmt.Println("vault_client_key:", config.Secrets.Vault.VaultClientKey)
 	}
 	if c.IsSet("all") || c.IsSet("vault_skip_verify") {
-		fmt.Println("VaultSkipVerify:", config.Secrets.Vault.VaultSkipVerify)
+		fmt.Println("vault_skip_verify:", config.Secrets.Vault.VaultSkipVerify)
 	}
 	if c.IsSet("all") || c.IsSet("vault_tls_server_name") {
-		fmt.Println("VaultTlsServerName:", config.Secrets.Vault.VaultTlsServerName)
+		fmt.Println("vault_tls_server_name:", config.Secrets.Vault.VaultTlsServerName)
 	}
 	if c.IsSet("all") || c.IsSet("vault_base_path") {
-		fmt.Println("VaultBasePath:", config.Secrets.Vault.VaultBasePath)
+		fmt.Println("vault_base_path:", config.Secrets.Vault.VaultBasePath)
 	}
 	return nil
 }
@@ -1220,19 +1236,19 @@ func showAwsValues(c *cli.Context) error {
 		return printJson(config.Secrets.Aws)
 	}
 	if c.IsSet("all") || c.IsSet("aws_access_key_id") {
-		fmt.Println("AwsAccessKeyId:", config.Secrets.Aws.AwsAccessKeyId)
+		fmt.Println("aws_access_key_id:", config.Secrets.Aws.AwsAccessKeyId)
 	}
 	if c.IsSet("all") || c.IsSet("aws_secret_access_key") {
-		fmt.Println("AwsSecretAccessKey:", config.Secrets.Aws.AwsSecretAccessKey)
+		fmt.Println("aws_secret_access_key:", config.Secrets.Aws.AwsSecretAccessKey)
 	}
 	if c.IsSet("all") || c.IsSet("aws_secret_token_key") {
-		fmt.Println("AwsSecretTokenKey:", config.Secrets.Aws.AwsSecretTokenKey)
+		fmt.Println("aws_secret_token_key:", config.Secrets.Aws.AwsSecretTokenKey)
 	}
 	if c.IsSet("all") || c.IsSet("aws_cmk") {
-		fmt.Println("AwsCmk:", config.Secrets.Aws.AwsCmk)
+		fmt.Println("aws_cmk:", config.Secrets.Aws.AwsCmk)
 	}
 	if c.IsSet("all") || c.IsSet("aws_region") {
-		fmt.Println("AwsRegion:", config.Secrets.Aws.AwsRegion)
+		fmt.Println("aws_region:", config.Secrets.Aws.AwsRegion)
 	}
 	return nil
 }

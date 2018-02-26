@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/urfave/cli"
+	"fmt"
 	"os"
 	"reflect"
-	"fmt"
+
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/urfave/cli"
 )
 
 func main() {
@@ -26,7 +27,7 @@ func printFields(v reflect.Value, prefix string, C *[]cli.Command) {
 	c.Description = c.Name + ": Description to be added"
 	c.Flags = make([]cli.Flag, 0, 0)
 	c.Subcommands = make([]cli.Command, 0, 0)
-	for i :=0; i < v.NumField(); i++ {
+	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		switch k := field.Kind(); k {
 		case reflect.Ptr:
@@ -36,34 +37,34 @@ func printFields(v reflect.Value, prefix string, C *[]cli.Command) {
 				c.Subcommands = append(c.Subcommands, subCommands...)
 			}
 		case reflect.Slice:
-			switch field.Type(){
+			switch field.Type() {
 			case reflect.TypeOf([]string{}):
 				c.Flags = append(c.Flags,
 					cli.StringSliceFlag{
-						Name:v.Type().Field(i).Name,
+						Name:  v.Type().Field(i).Name,
 						Usage: fmt.Sprintf("(Str...)\t%s: Description to be added", v.Type().Field(i).Name),
-						})
+					})
 			case reflect.TypeOf([]int{}):
 				c.Flags = append(c.Flags,
 					cli.IntSliceFlag{
-						Name:v.Type().Field(i).Name,
+						Name:  v.Type().Field(i).Name,
 						Usage: fmt.Sprintf("(Int...)\t%s: Description to be added", v.Type().Field(i).Name),
-						})
+					})
 			default:
 				fmt.Println("ignoring", prefix+v.Type().Field(i).Name, "of type", v.Field(i).Type().String())
 			}
 		case reflect.String:
 			c.Flags = append(c.Flags,
 				cli.StringFlag{
-					Name:v.Type().Field(i).Name,
+					Name:  v.Type().Field(i).Name,
 					Usage: fmt.Sprintf("(Str)\t%s: Description to be added", v.Type().Field(i).Name),
-					})
+				})
 		case reflect.Int:
 			c.Flags = append(c.Flags,
 				cli.IntFlag{
-					Name:v.Type().Field(i).Name,
+					Name:  v.Type().Field(i).Name,
 					Usage: fmt.Sprintf("(Int)\t%s: Description to be added", v.Type().Field(i).Name),
-					})
+				})
 		default:
 			//M[v.Field(i).Kind()] = append(M[v.Field(i).Kind()], prefix+v.Type().Field(i).Name)
 		}

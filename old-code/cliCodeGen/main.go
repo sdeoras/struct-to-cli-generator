@@ -1,10 +1,11 @@
 package main
 
 import (
-	"reflect"
 	"fmt"
-	"github.com/libopenstorage/openstorage/osdconfig"
 	"os"
+	"reflect"
+
+	"github.com/libopenstorage/openstorage/osdconfig"
 )
 
 var callbacks map[string][]string
@@ -48,7 +49,7 @@ func printFields(v reflect.Value, prefix, tab string) {
 	fmt.Println(tab, x, "Description:", "\"To be added\",")
 
 	fmt.Println(tab, x, "Subcommands: []cli.Command{")
-	for i :=0; i < v.NumField(); i++ {
+	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		switch k := field.Kind(); k {
 		case reflect.Ptr:
@@ -74,11 +75,11 @@ func printFields(v reflect.Value, prefix, tab string) {
 	fmt.Println(tab, x, x, x, x, "Action:", "get_"+prefix+"_values,")
 	callbacks[prefix] = append(callbacks[prefix], "get_"+prefix+"_values")
 	fmt.Println(tab, x, x, x, x, "Flags: []cli.Flag{")
-	for i :=0; i < v.NumField(); i++ {
+	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		switch k := field.Kind(); k {
 		case reflect.Slice:
-			switch field.Type(){
+			switch field.Type() {
 			case reflect.TypeOf([]string{}):
 				fmt.Println(tab, x, x, x, x, x, "cli.BoolFlag{")
 				fmt.Println(tab, x, x, x, x, x, x, "Name:", "\""+v.Type().Field(i).Name+"\",")
@@ -119,13 +120,13 @@ func printFields(v reflect.Value, prefix, tab string) {
 	fmt.Println(tab, x, x, x, x, "Usage:", "\"Set values\",")
 	fmt.Println(tab, x, x, x, x, "Description:", "\"Set values\",")
 	fmt.Println(tab, x, x, x, x, "Action:", "set_"+prefix+"_values,")
-	callbacks[prefix] = append(callbacks[prefix],"set_"+prefix+"_values")
+	callbacks[prefix] = append(callbacks[prefix], "set_"+prefix+"_values")
 	fmt.Println(tab, x, x, x, x, "Flags: []cli.Flag{")
-	for i :=0; i < v.NumField(); i++ {
+	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		switch k := field.Kind(); k {
 		case reflect.Slice:
-			switch field.Type(){
+			switch field.Type() {
 			case reflect.TypeOf([]string{}):
 				fmt.Println(tab, x, x, x, x, x, "cli.StringSliceFlag{")
 				fmt.Println(tab, x, x, x, x, x, x, "Name:", "\""+v.Type().Field(i).Name+"\",")

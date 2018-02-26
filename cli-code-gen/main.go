@@ -154,7 +154,7 @@ func getFunc(cw, fw *bufio.Writer, v reflect.Value, i int, tab, prefix string) {
 
 	fmt.Fprintln(fw, "\t", "if c.IsSet(\"all\") || c.IsSet(\""+getTag(v.Type(), i)+"\") {")
 	fmt.Fprintln(fw, "\t\t",
-		"fmt.Println(", "\""+v.Type().Field(i).Name+":\",", prefix2VarName[prefix]+"."+v.Type().Field(i).Name, ")")
+		"fmt.Println(", "\""+getJsonName(v.Type(), i)+":\",", prefix2VarName[prefix]+"."+v.Type().Field(i).Name, ")")
 	fmt.Fprintln(fw, "\t", "}")
 
 	fmt.Fprintln(cw, tabs(tab, 5), "Usage: \"(Bool)\\t"+getUsage(v.Type(), i)+"\",")
@@ -420,6 +420,18 @@ func isEnabled(t reflect.Type, n int) bool {
 		return false
 	}
 	return true
+}
+
+func getJsonName(t reflect.Type, n int) string {
+	if n > t.NumField() {
+		panic("index out of bounds")
+	}
+
+	tag := t.Field(n).Tag.Get("json")
+	if len(tag) == 0 {
+		tag = "none yet"
+	}
+	return strings.Split(tag, ",")[0]
 }
 
 func getUsage(t reflect.Type, n int) string {
