@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"time"
 )
 
 var prefix2VarName map[string]string
@@ -167,7 +168,7 @@ func getFunc(cw, fw *bufio.Writer, v reflect.Value, i int, tab, prefix string) {
 }
 
 // define a function  for setter field behavior
-func setFunc(cw, fw *bufio.Writer, v reflect.Value, i int, tab, prefix, flagType, flagTag string) {
+func setFunc(cw, fw *bufio.Writer, v reflect.Value, i int, tab, prefix, castType, flagType, flagTag string) {
 	if !isEnabled(v.Type(), i) {
 		return
 	}
@@ -175,8 +176,13 @@ func setFunc(cw, fw *bufio.Writer, v reflect.Value, i int, tab, prefix, flagType
 	fmt.Fprintln(cw, tabs(tab, 3), "Name:", "\""+getTag(v.Type(), i)+"\",")
 
 	fmt.Fprintln(fw, "\t", "if c.IsSet(\""+getTag(v.Type(), i)+"\") {")
-	fmt.Fprintln(fw, "\t\t",
-		prefix2VarName[prefix]+"."+v.Type().Field(i).Name, "=", "c."+flagType+"(\""+getTag(v.Type(), i)+"\")")
+	if castType == "" {
+		fmt.Fprintln(fw, "\t\t",
+			prefix2VarName[prefix]+"."+v.Type().Field(i).Name, "=", "c."+flagType+"(\""+getTag(v.Type(), i)+"\")")
+	} else {
+		fmt.Fprintln(fw, "\t\t",
+			prefix2VarName[prefix]+"."+v.Type().Field(i).Name, "=", castType + "(c."+flagType+"(\""+getTag(v.Type(), i)+"\"))")
+	}
 	fmt.Fprintln(fw, "\t", "}")
 
 	fmt.Fprintln(cw, tabs(tab, 3), "Usage: \"("+flagTag+")\\t"+getUsage(v.Type(), i)+"\",")
@@ -234,21 +240,25 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		case reflect.Slice:
 			switch field.Type() {
 			case reflect.TypeOf([]string{}):
-				setFunc(cw, fw, v, i, tab, prefix, "StringSlice", "Str...")
+				setFunc(cw, fw, v, i, tab, prefix, "", "StringSlice", "Str...")
 
 			case reflect.TypeOf([]int{}):
-				setFunc(cw, fw, v, i, tab, prefix, "IntSlice", "Int...")
+				setFunc(cw, fw, v, i, tab, prefix, "", "IntSlice", "Int...")
 			default:
 				fmt.Fprintln(os.Stderr, "ignoring",
 					prefix+v.Type().Field(i).Name, "of type", v.Field(i).Type().String())
 			}
 		case reflect.String:
-			setFunc(cw, fw, v, i, tab, prefix, "String", "Str")
+			setFunc(cw, fw, v, i, tab, prefix, "", "String", "Str")
 		case reflect.Int:
-			setFunc(cw, fw, v, i, tab, prefix, "Int", "Int")
+			setFunc(cw, fw, v, i, tab, prefix, "", "Int", "Int")
+		case reflect.Uint32:
+			setFunc(cw, fw, v, i, tab, prefix, "uint32", "Uint", "Uint")
 		case reflect.Bool:
-			setFunc(cw, fw, v, i, tab, prefix, "Bool", "Bool")
+			setFunc(cw, fw, v, i, tab, prefix, "", "Bool", "Bool")
+		case reflect.Ptr:
 		default:
+			fmt.Println("skipping in set: ", prefix+"."+v.Type().Field(i).Name, " of type: ", v.Field(i).Kind())
 			//M[v.Field(i).Kind()] = append(M[v.Field(i).Kind()], prefix+v.Type().Field(i).Name)
 		}
 	}
@@ -305,6 +315,13 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		switch k := field.Kind(); k {
+		case reflect.Struct:
+			switch field.Type() {
+			case reflect.TypeOf(time.Now()):
+				getFunc(cw, fw, v, i, tab, prefix)
+			default:
+				fmt.Println("skipping in get: ", prefix+"."+v.Type().Field(i).Name, " of type: ", v.Field(i).Kind())
+			}
 		case reflect.Slice:
 			switch field.Type() {
 			case reflect.TypeOf([]string{}):
@@ -319,9 +336,13 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 			getFunc(cw, fw, v, i, tab, prefix)
 		case reflect.Int:
 			getFunc(cw, fw, v, i, tab, prefix)
+		case reflect.Uint32:
+			getFunc(cw, fw, v, i, tab, prefix)
 		case reflect.Bool:
 			getFunc(cw, fw, v, i, tab, prefix)
+		case reflect.Ptr:
 		default:
+			fmt.Println("skipping in get: ", prefix+"."+v.Type().Field(i).Name, " of type: ", v.Field(i).Kind())
 			//M[v.Field(i).Kind()] = append(M[v.Field(i).Kind()], prefix+v.Type().Field(i).Name)
 		}
 	}
