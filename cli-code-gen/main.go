@@ -9,7 +9,6 @@ import (
 	"os"
 	"reflect"
 	"strings"
-
 	"time"
 
 	"github.com/libopenstorage/openstorage/osdconfig"
@@ -105,11 +104,7 @@ func main() {
 	prefix2VarName = make(map[string]string)
 	prefixOrigin = make(map[string]string)
 	prefixDepth = make(map[string]int)
-	config := new(osdconfig.ClusterConfig)
-	config.Secrets = new(osdconfig.SecretsConfig)
-	config.Kvdb = new(osdconfig.KvdbConfig)
-	config.Secrets.Vault = new(osdconfig.VaultConfig)
-	config.Secrets.Aws = new(osdconfig.AWSConfig)
+	config := new(osdconfig.ClusterConfig).Init()
 
 	var cb bytes.Buffer
 	cw = bufio.NewWriter(&cb)
@@ -355,9 +350,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 
 	// subcommand for node
 	if prefix == "config" {
-		config := new(osdconfig.NodeConfig)
-		config.Network = new(osdconfig.NetworkConfig)
-		config.Storage = new(osdconfig.StorageConfig)
+		config := new(osdconfig.NodeConfig).Init()
 		prefix2VarName["node"] = "config"
 		prefixOrigin["node"] = "node"
 		prefixDepth["node"] = 0

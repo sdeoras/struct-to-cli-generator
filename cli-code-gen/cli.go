@@ -326,6 +326,60 @@ func main() {
 								},
 							},
 						},
+						{
+							Name:        "geo",
+							Usage:       "Geographic configuration",
+							Description: "Stores geo info for node",
+							Hidden:      false,
+							Action:      setGeoValues,
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:   "rack",
+									Usage:  "(Str)\tRack info",
+									Hidden: false,
+								},
+								cli.StringFlag{
+									Name:   "zone",
+									Usage:  "(Str)\tZone info",
+									Hidden: false,
+								},
+								cli.StringFlag{
+									Name:   "region",
+									Usage:  "(Str)\tRegion info",
+									Hidden: false,
+								},
+							},
+							Subcommands: []cli.Command{
+								{
+									Name:        "show",
+									Usage:       "Show values",
+									Description: "Show values",
+									Action:      showGeoValues,
+									Flags: []cli.Flag{
+										cli.BoolFlag{
+											Name:   "all, a",
+											Usage:  "(Bool)\tShow all data",
+											Hidden: false,
+										},
+										cli.BoolFlag{
+											Name:   "rack",
+											Usage:  "(Bool)\tRack info",
+											Hidden: false,
+										},
+										cli.BoolFlag{
+											Name:   "zone",
+											Usage:  "(Bool)\tZone info",
+											Hidden: false,
+										},
+										cli.BoolFlag{
+											Name:   "region",
+											Usage:  "(Bool)\tRegion info",
+											Hidden: false,
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 				{
@@ -836,6 +890,77 @@ func showStorageValues(c *cli.Context) error {
 	}
 	if c.IsSet("all") || c.IsSet("raid_level_md") {
 		fmt.Println("raid_level_md:", config.Storage.RaidLevelMd)
+	}
+	return nil
+}
+
+func setGeoValues(c *cli.Context) error {
+	if !c.Parent().IsSet("node_id") {
+		err := errors.New("--node_id must be set")
+		logrus.Error(err)
+		return err
+	}
+	config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
+	if err != nil {
+		logrus.Error(err)
+		return err
+	}
+	if config == nil {
+		err := errors.New("config" + ": no data found, received nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Geo == nil {
+		err := errors.New("config.Geo" + ": no data found, received nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
+	if c.IsSet("rack") {
+		config.Geo.Rack = c.String("rack")
+	}
+	if c.IsSet("zone") {
+		config.Geo.Zone = c.String("zone")
+	}
+	if c.IsSet("region") {
+		config.Geo.Region = c.String("region")
+	}
+	return clusterManager.SetNodeConf(config)
+}
+
+func showGeoValues(c *cli.Context) error {
+	if !c.Parent().Parent().IsSet("node_id") {
+		err := errors.New("--node_id must be set")
+		logrus.Error(err)
+		return err
+	}
+	config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
+	if err != nil {
+		logrus.Error(err)
+		return err
+	}
+	if config == nil {
+		err := errors.New("config" + ": no data found, received nil pointer")
+		logrus.Error(err)
+		return err
+	}
+	if config.Geo == nil {
+		err := errors.New("config.Geo" + ": no data found, received nil pointer")
+		logrus.Error(err)
+		return err
+	}
+
+	if c.GlobalBool("json") {
+		return printJson(config.Geo)
+	}
+	if c.IsSet("all") || c.IsSet("rack") {
+		fmt.Println("rack:", config.Geo.Rack)
+	}
+	if c.IsSet("all") || c.IsSet("zone") {
+		fmt.Println("zone:", config.Geo.Zone)
+	}
+	if c.IsSet("all") || c.IsSet("region") {
+		fmt.Println("region:", config.Geo.Region)
 	}
 	return nil
 }
