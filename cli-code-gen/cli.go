@@ -105,11 +105,6 @@ func main() {
 					 Usage: "(Str)\tCluster ID info",
 					 Hidden: false,
 				 },
-				 cli.StringSliceFlag{
-					 Name: "node_id",
-					 Usage: "(Str...)\tNode ID info",
-					 Hidden: false,
-				 },
 				 cli.StringFlag{
 					 Name: "domain",
 					 Usage: "(Str)\tusage to be added",
@@ -151,11 +146,6 @@ func main() {
 						 cli.BoolFlag{
 							 Name: "cluster_id",
 							 Usage: "(Bool)\tCluster ID info",
-							 Hidden: false,
-						 },
-						 cli.BoolFlag{
-							 Name: "node_id",
-							 Usage: "(Bool)\tNode ID info",
 							 Hidden: false,
 						 },
 						 cli.BoolFlag{
@@ -598,9 +588,6 @@ func setConfigValues(c *cli.Context) error {
 	 if c.IsSet("cluster_id") {
 		 config.ClusterId = c.String("cluster_id")
 	 }
-	 if c.IsSet("node_id") {
-		 config.NodeId = c.StringSlice("node_id")
-	 }
 	 if c.IsSet("domain") {
 		 config.Domain = c.String("domain")
 	 }
@@ -636,9 +623,6 @@ func showConfigValues(c *cli.Context) error {
 	 }
 	 if c.IsSet("all") || c.IsSet("cluster_id") {
 		 fmt.Println( "cluster_id:", config.ClusterId )
-	 }
-	 if c.IsSet("all") || c.IsSet("node_id") {
-		 fmt.Println( "node_id:", config.NodeId )
 	 }
 	 if c.IsSet("all") || c.IsSet("domain") {
 		 fmt.Println( "domain:", config.Domain )
