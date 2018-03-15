@@ -10,8 +10,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/libopenstorage/openstorage/osdconfig"
 	"time"
+
+	"github.com/libopenstorage/openstorage/osdconfig"
 )
 
 var prefix2VarName map[string]string
@@ -181,7 +182,7 @@ func setFunc(cw, fw *bufio.Writer, v reflect.Value, i int, tab, prefix, castType
 			prefix2VarName[prefix]+"."+v.Type().Field(i).Name, "=", "c."+flagType+"(\""+getTag(v.Type(), i)+"\")")
 	} else {
 		fmt.Fprintln(fw, "\t\t",
-			prefix2VarName[prefix]+"."+v.Type().Field(i).Name, "=", castType + "(c."+flagType+"(\""+getTag(v.Type(), i)+"\"))")
+			prefix2VarName[prefix]+"."+v.Type().Field(i).Name, "=", castType+"(c."+flagType+"(\""+getTag(v.Type(), i)+"\"))")
 	}
 	fmt.Fprintln(fw, "\t", "}")
 
