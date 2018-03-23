@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"strconv"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/urfave/cli"
+	"io/ioutil"
+	"os"
+	"strconv"
 )
 
 type manager struct{}
@@ -710,7 +709,12 @@ func setConfigValues(c *cli.Context) error {
 	if c.IsSet("domain") {
 		config.Domain = c.String("domain")
 	}
-	return clusterManager.SetClusterConf(config)
+	if err := clusterManager.SetClusterConf(config); err != nil {
+		logrus.Error("Set config for cluster")
+		return err
+	}
+	logrus.Info("Set config for cluster")
+	return nil
 }
 
 func showConfigValues(c *cli.Context) error {
@@ -760,6 +764,7 @@ func setNodeValues(c *cli.Context) error {
 	if c.IsSet("all") {
 		configs, err = clusterManager.EnumerateNodeConf()
 		if err != nil {
+			logrus.Error(err)
 			return err
 		}
 	} else {
@@ -771,6 +776,7 @@ func setNodeValues(c *cli.Context) error {
 		*configs = append(*configs, config)
 	}
 	for _, config := range *configs {
+		config := config
 		if config == nil {
 			err := errors.New("config" + ": no data found, received nil pointer")
 			logrus.Error(err)
@@ -784,8 +790,10 @@ func setNodeValues(c *cli.Context) error {
 			config.CSIEndpoint = c.String("csi_endpoint")
 		}
 		if err := clusterManager.SetNodeConf(config); err != nil {
-			return nil
+			logrus.Error("Set config for node: ", config.NodeId)
+			return err
 		}
+		logrus.Info("Set config for node: ", config.NodeId)
 	}
 	return nil
 }
@@ -801,6 +809,7 @@ func showNodeValues(c *cli.Context) error {
 	if c.Parent().IsSet("all") {
 		configs, err = clusterManager.EnumerateNodeConf()
 		if err != nil {
+			logrus.Error(err)
 			return err
 		}
 	} else {
@@ -848,6 +857,7 @@ func setNetworkValues(c *cli.Context) error {
 	if c.Parent().IsSet("all") {
 		configs, err = clusterManager.EnumerateNodeConf()
 		if err != nil {
+			logrus.Error(err)
 			return err
 		}
 	} else {
@@ -859,6 +869,7 @@ func setNetworkValues(c *cli.Context) error {
 		*configs = append(*configs, config)
 	}
 	for _, config := range *configs {
+		config := config
 		if config == nil {
 			err := errors.New("config" + ": no data found, received nil pointer")
 			logrus.Error(err)
@@ -877,8 +888,10 @@ func setNetworkValues(c *cli.Context) error {
 			config.Network.DataIface = c.String("data_interface")
 		}
 		if err := clusterManager.SetNodeConf(config); err != nil {
-			return nil
+			logrus.Error("Set config for node: ", config.NodeId)
+			return err
 		}
+		logrus.Info("Set config for node: ", config.NodeId)
 	}
 	return nil
 }
@@ -894,6 +907,7 @@ func showNetworkValues(c *cli.Context) error {
 	if c.Parent().Parent().IsSet("all") {
 		configs, err = clusterManager.EnumerateNodeConf()
 		if err != nil {
+			logrus.Error(err)
 			return err
 		}
 	} else {
@@ -946,6 +960,7 @@ func setStorageValues(c *cli.Context) error {
 	if c.Parent().IsSet("all") {
 		configs, err = clusterManager.EnumerateNodeConf()
 		if err != nil {
+			logrus.Error(err)
 			return err
 		}
 	} else {
@@ -957,6 +972,7 @@ func setStorageValues(c *cli.Context) error {
 		*configs = append(*configs, config)
 	}
 	for _, config := range *configs {
+		config := config
 		if config == nil {
 			err := errors.New("config" + ": no data found, received nil pointer")
 			logrus.Error(err)
@@ -987,8 +1003,10 @@ func setStorageValues(c *cli.Context) error {
 			config.Storage.RaidLevelMd = c.String("raid_level_md")
 		}
 		if err := clusterManager.SetNodeConf(config); err != nil {
-			return nil
+			logrus.Error("Set config for node: ", config.NodeId)
+			return err
 		}
+		logrus.Info("Set config for node: ", config.NodeId)
 	}
 	return nil
 }
@@ -1004,6 +1022,7 @@ func showStorageValues(c *cli.Context) error {
 	if c.Parent().Parent().IsSet("all") {
 		configs, err = clusterManager.EnumerateNodeConf()
 		if err != nil {
+			logrus.Error(err)
 			return err
 		}
 	} else {
@@ -1068,6 +1087,7 @@ func setGeoValues(c *cli.Context) error {
 	if c.Parent().IsSet("all") {
 		configs, err = clusterManager.EnumerateNodeConf()
 		if err != nil {
+			logrus.Error(err)
 			return err
 		}
 	} else {
@@ -1079,6 +1099,7 @@ func setGeoValues(c *cli.Context) error {
 		*configs = append(*configs, config)
 	}
 	for _, config := range *configs {
+		config := config
 		if config == nil {
 			err := errors.New("config" + ": no data found, received nil pointer")
 			logrus.Error(err)
@@ -1100,8 +1121,10 @@ func setGeoValues(c *cli.Context) error {
 			config.Geo.Region = c.String("region")
 		}
 		if err := clusterManager.SetNodeConf(config); err != nil {
-			return nil
+			logrus.Error("Set config for node: ", config.NodeId)
+			return err
 		}
+		logrus.Info("Set config for node: ", config.NodeId)
 	}
 	return nil
 }
@@ -1117,6 +1140,7 @@ func showGeoValues(c *cli.Context) error {
 	if c.Parent().Parent().IsSet("all") {
 		configs, err = clusterManager.EnumerateNodeConf()
 		if err != nil {
+			logrus.Error(err)
 			return err
 		}
 	} else {
@@ -1184,7 +1208,12 @@ func setSecretsValues(c *cli.Context) error {
 	if c.IsSet("cluster_secret_key") {
 		config.Secrets.ClusterSecretKey = c.String("cluster_secret_key")
 	}
-	return clusterManager.SetClusterConf(config)
+	if err := clusterManager.SetClusterConf(config); err != nil {
+		logrus.Error("Set config for cluster")
+		return err
+	}
+	logrus.Info("Set config for cluster")
+	return nil
 }
 
 func showSecretsValues(c *cli.Context) error {
@@ -1265,7 +1294,12 @@ func setVaultValues(c *cli.Context) error {
 	if c.IsSet("base_path") {
 		config.Secrets.Vault.BasePath = c.String("base_path")
 	}
-	return clusterManager.SetClusterConf(config)
+	if err := clusterManager.SetClusterConf(config); err != nil {
+		logrus.Error("Set config for cluster")
+		return err
+	}
+	logrus.Info("Set config for cluster")
+	return nil
 }
 
 func showVaultValues(c *cli.Context) error {
@@ -1360,7 +1394,12 @@ func setAwsValues(c *cli.Context) error {
 	if c.IsSet("aws_region") {
 		config.Secrets.Aws.Region = c.String("aws_region")
 	}
-	return clusterManager.SetClusterConf(config)
+	if err := clusterManager.SetClusterConf(config); err != nil {
+		logrus.Error("Set config for cluster")
+		return err
+	}
+	logrus.Info("Set config for cluster")
+	return nil
 }
 
 func showAwsValues(c *cli.Context) error {

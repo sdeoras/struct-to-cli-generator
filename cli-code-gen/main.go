@@ -274,6 +274,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		fmt.Fprintln(fw, "\t", "if "+s+".IsSet(\"all\") {")
 		fmt.Fprintln(fw, "\t\t", "configs, err = clusterManager.EnumerateNodeConf()")
 		fmt.Fprintln(fw, "\t\t", "if err != nil {")
+		fmt.Fprintln(fw, "\t\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t\t", "return err")
 		fmt.Fprintln(fw, "\t\t", "}")
 		fmt.Fprintln(fw, "\t", "} else {")
@@ -285,6 +286,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		fmt.Fprintln(fw, "\t\t", "*configs = append(*configs, config)")
 		fmt.Fprintln(fw, "\t", "}")
 		fmt.Fprintln(fw, "\t\t", "for _, config := range *configs {")
+		fmt.Fprintln(fw, "\t\t\t", "config := config")
 	} else {
 		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetClusterConf()")
 		fmt.Fprintln(fw, "\t", "if err != nil {")
@@ -331,13 +333,20 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 	}
 
 	if prefixOrigin[prefix] == "node" {
-		fmt.Fprintln(fw, "\t\t", "if err := clusterManager.SetNodeConf(config); err != nil {")
-		fmt.Fprintln(fw, "\t\t\t", "return nil")
+		fmt.Fprintln(fw, "\t\t\t", "if err := clusterManager.SetNodeConf(config); err != nil {")
+		fmt.Fprintln(fw, "\t\t\t\t", "logrus.Error(\"Set config for node: \", config.NodeId)")
+		fmt.Fprintln(fw, "\t\t\t\t", "return err")
+		fmt.Fprintln(fw, "\t\t\t", "}")
+		fmt.Fprintln(fw, "\t\t\t", "logrus.Info(\"Set config for node: \", config.NodeId)")
 		fmt.Fprintln(fw, "\t\t", "}")
-		fmt.Fprintln(fw, "\t", "}")
 		fmt.Fprintln(fw, "\t", "return nil")
 	} else {
-		fmt.Fprintln(fw, "\t", "return clusterManager.SetClusterConf(config)")
+		fmt.Fprintln(fw, "\t", "if err := clusterManager.SetClusterConf(config); err != nil {")
+		fmt.Fprintln(fw, "\t\t", "logrus.Error(\"Set config for cluster\")")
+		fmt.Fprintln(fw, "\t\t", "return err")
+		fmt.Fprintln(fw, "\t", "}")
+		fmt.Fprintln(fw, "\t", "logrus.Info(\"Set config for cluster\")")
+		fmt.Fprintln(fw, "\t", "return nil")
 	}
 	fmt.Fprintln(fw, "}")
 	fmt.Fprintln(fw)
@@ -366,6 +375,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		fmt.Fprintln(fw, "\t", "if "+s+".IsSet(\"all\") {")
 		fmt.Fprintln(fw, "\t\t", "configs, err = clusterManager.EnumerateNodeConf()")
 		fmt.Fprintln(fw, "\t\t", "if err != nil {")
+		fmt.Fprintln(fw, "\t\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t\t", "return err")
 		fmt.Fprintln(fw, "\t\t", "}")
 		fmt.Fprintln(fw, "\t", "} else {")
@@ -376,7 +386,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		fmt.Fprintln(fw, "\t\t", "}")
 		fmt.Fprintln(fw, "\t\t", "*configs = append(*configs, config)")
 		fmt.Fprintln(fw, "\t", "}")
-		fmt.Fprintln(fw, "\t\t", "for _, config := range *configs {")
+		fmt.Fprintln(fw, "\t", "for _, config := range *configs {")
 	} else {
 		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetClusterConf()")
 		fmt.Fprintln(fw, "\t", "if err != nil {")
@@ -438,7 +448,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		}
 	}
 	if prefixOrigin[prefix] == "node" {
-		fmt.Fprintln(fw, "\t", "}")
+		fmt.Fprintln(fw, "\t\t", "}")
 		fmt.Fprintln(fw, "\t", "}")
 	}
 	fmt.Fprintln(fw, "\t", "return nil")
