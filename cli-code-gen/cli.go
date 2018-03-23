@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/osdconfig"
@@ -51,7 +52,7 @@ func (m *manager) SetNodeConf(config *osdconfig.NodeConfig) error {
 	if b, err := ioutil.ReadFile("/tmp/nodeConfig.json"); err != nil {
 		logrus.Warn(err)
 	} else {
-		if err := json.Unmarshal(b, configMap); err != nil {
+		if err := json.Unmarshal(b, &configMap); err != nil {
 			logrus.Warn(err)
 		}
 	}
@@ -66,10 +67,69 @@ func (m *manager) SetNodeConf(config *osdconfig.NodeConfig) error {
 	return nil
 }
 
+func (m *manager) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
+	configMap := make(map[string]*osdconfig.NodeConfig)
+	if b, err := ioutil.ReadFile("/tmp/nodeConfig.json"); err != nil {
+		return nil, err
+	} else {
+		if err := json.Unmarshal(b, &configMap); err != nil {
+			return nil, err
+		}
+	}
+	nodesConfig := new(osdconfig.NodesConfig)
+	for _, val := range configMap {
+		*nodesConfig = append(*nodesConfig, val)
+	}
+	return nodesConfig, nil
+}
+
+func (m *manager) DeleteNodeConf(nodeId string) error {
+	return nil
+}
+
 var clusterManager *manager
 
 func main() {
 	clusterManager = new(manager)
+
+	fileInfo, err := os.Stat("/tmp/config.json")
+	if err == nil && fileInfo.IsDir() {
+		logrus.Fatal("log file is a dir")
+	}
+
+	if (err == nil && fileInfo.Size() == 0) || err != nil {
+		clusterConfig := new(osdconfig.ClusterConfig).Init()
+		clusterConfig.ClusterId = "myCluster"
+		clusterConfig.Description = "myDescription"
+		if jb, err := json.MarshalIndent(clusterConfig, "", "  "); err != nil {
+			logrus.Fatal(err)
+		} else {
+			if err := ioutil.WriteFile("/tmp/config.json", jb, 0666); err != nil {
+				logrus.Fatal(err)
+			}
+		}
+	}
+
+	fileInfo, err = os.Stat("/tmp/nodeConfig.json")
+	if err == nil && fileInfo.IsDir() {
+		logrus.Fatal("log file is a dir")
+	}
+	if (err == nil && fileInfo.Size() == 0) || err != nil {
+		configMap := make(map[string]*osdconfig.NodeConfig)
+		for i := 0; i < 3; i++ {
+			config := new(osdconfig.NodeConfig).Init()
+			config.NodeId = "nodeid_" + strconv.FormatInt(int64(i), 10)
+			config.Storage.Devices = []string{"/dev/sda", "/dev/sdb"}
+			configMap[config.NodeId] = config
+		}
+		if jb, err := json.Marshal(configMap); err != nil {
+			logrus.Fatal(err)
+		} else {
+			if err := ioutil.WriteFile("/tmp/nodeConfig.json", jb, 0666); err != nil {
+				logrus.Fatal(err)
+			}
+		}
+	}
 
 	app := cli.NewApp()
 	app.Flags = []cli.Flag{
@@ -163,6 +223,10 @@ func main() {
 					Hidden:      false,
 					Action:      setNodeValues,
 					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "all, a",
+							Usage: "(Bool)\tFor all nodes on cluster",
+						},
 						cli.StringFlag{
 							Name:   "node_id",
 							Usage:  "(Str)\tID for the node",
@@ -686,281 +750,413 @@ func showConfigValues(c *cli.Context) error {
 }
 
 func setNodeValues(c *cli.Context) error {
-	if !c.IsSet("node_id") {
-		err := errors.New("--node_id must be set")
+	if !c.IsSet("node_id") && !c.IsSet("all") {
+		err := errors.New("--node_id must be provided or --all must be set")
 		logrus.Error(err)
 		return err
 	}
-	config, err := clusterManager.GetNodeConf(c.String("node_id"))
-	if err != nil {
-		logrus.Error(err)
-		return err
+	configs := new(osdconfig.NodesConfig)
+	var err error
+	if c.IsSet("all") {
+		configs, err = clusterManager.EnumerateNodeConf()
+		if err != nil {
+			return err
+		}
+	} else {
+		config, err := clusterManager.GetNodeConf(c.String("node_id"))
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		*configs = append(*configs, config)
 	}
-	if config == nil {
-		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
+	for _, config := range *configs {
+		if config == nil {
+			err := errors.New("config" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
 
-	if c.IsSet("node_id") {
-		config.NodeId = c.String("node_id")
+		if c.IsSet("node_id") {
+			config.NodeId = c.String("node_id")
+		}
+		if c.IsSet("csi_endpoint") {
+			config.CSIEndpoint = c.String("csi_endpoint")
+		}
+		if err := clusterManager.SetNodeConf(config); err != nil {
+			return nil
+		}
 	}
-	if c.IsSet("csi_endpoint") {
-		config.CSIEndpoint = c.String("csi_endpoint")
-	}
-	return clusterManager.SetNodeConf(config)
+	return nil
 }
 
 func showNodeValues(c *cli.Context) error {
-	if !c.Parent().IsSet("node_id") {
-		err := errors.New("--node_id must be set")
+	if !c.Parent().IsSet("node_id") && !c.Parent().IsSet("all") {
+		err := errors.New("--node_id must be provided or --all must be set")
 		logrus.Error(err)
 		return err
 	}
-	config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
-	if err != nil {
-		logrus.Error(err)
-		return err
+	configs := new(osdconfig.NodesConfig)
+	var err error
+	if c.Parent().IsSet("all") {
+		configs, err = clusterManager.EnumerateNodeConf()
+		if err != nil {
+			return err
+		}
+	} else {
+		config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		*configs = append(*configs, config)
 	}
-	if config == nil {
-		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
+	for _, config := range *configs {
+		if config == nil {
+			err := errors.New("config" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
 
-	if c.GlobalBool("json") {
-		return printJson(config)
-	}
-	if c.IsSet("all") || c.IsSet("node_id") {
-		fmt.Println("node_id:", config.NodeId)
-	}
-	if c.IsSet("all") || c.IsSet("csi_endpoint") {
-		fmt.Println("csi_endpoint:", config.CSIEndpoint)
+		if c.GlobalBool("json") {
+			if err := printJson(struct {
+				NodeId string      `json:"node_id"`
+				Config interface{} `json:"config"`
+			}{config.NodeId, config}); err != nil {
+				return err
+			}
+		} else {
+			if c.IsSet("all") || c.IsSet("node_id") {
+				fmt.Println("node_id:", config.NodeId)
+			}
+			if c.IsSet("all") || c.IsSet("csi_endpoint") {
+				fmt.Println("csi_endpoint:", config.CSIEndpoint)
+			}
+		}
 	}
 	return nil
 }
 
 func setNetworkValues(c *cli.Context) error {
-	if !c.Parent().IsSet("node_id") {
-		err := errors.New("--node_id must be set")
+	if !c.Parent().IsSet("node_id") && !c.Parent().IsSet("all") {
+		err := errors.New("--node_id must be provided or --all must be set")
 		logrus.Error(err)
 		return err
 	}
-	config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
-	if err != nil {
-		logrus.Error(err)
-		return err
+	configs := new(osdconfig.NodesConfig)
+	var err error
+	if c.Parent().IsSet("all") {
+		configs, err = clusterManager.EnumerateNodeConf()
+		if err != nil {
+			return err
+		}
+	} else {
+		config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		*configs = append(*configs, config)
 	}
-	if config == nil {
-		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
-	if config.Network == nil {
-		err := errors.New("config.Network" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
+	for _, config := range *configs {
+		if config == nil {
+			err := errors.New("config" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
+		if config.Network == nil {
+			err := errors.New("config.Network" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
 
-	if c.IsSet("mgt_interface") {
-		config.Network.MgtIface = c.String("mgt_interface")
+		if c.IsSet("mgt_interface") {
+			config.Network.MgtIface = c.String("mgt_interface")
+		}
+		if c.IsSet("data_interface") {
+			config.Network.DataIface = c.String("data_interface")
+		}
+		if err := clusterManager.SetNodeConf(config); err != nil {
+			return nil
+		}
 	}
-	if c.IsSet("data_interface") {
-		config.Network.DataIface = c.String("data_interface")
-	}
-	return clusterManager.SetNodeConf(config)
+	return nil
 }
 
 func showNetworkValues(c *cli.Context) error {
-	if !c.Parent().Parent().IsSet("node_id") {
-		err := errors.New("--node_id must be set")
+	if !c.Parent().Parent().IsSet("node_id") && !c.Parent().Parent().IsSet("all") {
+		err := errors.New("--node_id must be provided or --all must be set")
 		logrus.Error(err)
 		return err
 	}
-	config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
-	if err != nil {
-		logrus.Error(err)
-		return err
+	configs := new(osdconfig.NodesConfig)
+	var err error
+	if c.Parent().Parent().IsSet("all") {
+		configs, err = clusterManager.EnumerateNodeConf()
+		if err != nil {
+			return err
+		}
+	} else {
+		config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		*configs = append(*configs, config)
 	}
-	if config == nil {
-		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
-	if config.Network == nil {
-		err := errors.New("config.Network" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
+	for _, config := range *configs {
+		if config == nil {
+			err := errors.New("config" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
+		if config.Network == nil {
+			err := errors.New("config.Network" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
 
-	if c.GlobalBool("json") {
-		return printJson(config.Network)
-	}
-	if c.IsSet("all") || c.IsSet("mgt_interface") {
-		fmt.Println("mgt_interface:", config.Network.MgtIface)
-	}
-	if c.IsSet("all") || c.IsSet("data_interface") {
-		fmt.Println("data_interface:", config.Network.DataIface)
+		if c.GlobalBool("json") {
+			if err := printJson(struct {
+				NodeId string      `json:"node_id"`
+				Config interface{} `json:"config"`
+			}{config.NodeId, config.Network}); err != nil {
+				return err
+			}
+		} else {
+			if c.IsSet("all") || c.IsSet("mgt_interface") {
+				fmt.Println("mgt_interface:", config.Network.MgtIface)
+			}
+			if c.IsSet("all") || c.IsSet("data_interface") {
+				fmt.Println("data_interface:", config.Network.DataIface)
+			}
+		}
 	}
 	return nil
 }
 
 func setStorageValues(c *cli.Context) error {
-	if !c.Parent().IsSet("node_id") {
-		err := errors.New("--node_id must be set")
+	if !c.Parent().IsSet("node_id") && !c.Parent().IsSet("all") {
+		err := errors.New("--node_id must be provided or --all must be set")
 		logrus.Error(err)
 		return err
 	}
-	config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
-	if err != nil {
-		logrus.Error(err)
-		return err
+	configs := new(osdconfig.NodesConfig)
+	var err error
+	if c.Parent().IsSet("all") {
+		configs, err = clusterManager.EnumerateNodeConf()
+		if err != nil {
+			return err
+		}
+	} else {
+		config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		*configs = append(*configs, config)
 	}
-	if config == nil {
-		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
-	if config.Storage == nil {
-		err := errors.New("config.Storage" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
+	for _, config := range *configs {
+		if config == nil {
+			err := errors.New("config" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
+		if config.Storage == nil {
+			err := errors.New("config.Storage" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
 
-	if c.IsSet("devices_md") {
-		config.Storage.DevicesMd = c.StringSlice("devices_md")
+		if c.IsSet("devices_md") {
+			config.Storage.DevicesMd = c.StringSlice("devices_md")
+		}
+		if c.IsSet("devices") {
+			config.Storage.Devices = c.StringSlice("devices")
+		}
+		if c.IsSet("max_count") {
+			config.Storage.MaxCount = uint32(c.Uint("max_count"))
+		}
+		if c.IsSet("max_drive_set_count") {
+			config.Storage.MaxDriveSetCount = uint32(c.Uint("max_drive_set_count"))
+		}
+		if c.IsSet("raid_level") {
+			config.Storage.RaidLevel = c.String("raid_level")
+		}
+		if c.IsSet("raid_level_md") {
+			config.Storage.RaidLevelMd = c.String("raid_level_md")
+		}
+		if err := clusterManager.SetNodeConf(config); err != nil {
+			return nil
+		}
 	}
-	if c.IsSet("devices") {
-		config.Storage.Devices = c.StringSlice("devices")
-	}
-	if c.IsSet("max_count") {
-		config.Storage.MaxCount = uint32(c.Uint("max_count"))
-	}
-	if c.IsSet("max_drive_set_count") {
-		config.Storage.MaxDriveSetCount = uint32(c.Uint("max_drive_set_count"))
-	}
-	if c.IsSet("raid_level") {
-		config.Storage.RaidLevel = c.String("raid_level")
-	}
-	if c.IsSet("raid_level_md") {
-		config.Storage.RaidLevelMd = c.String("raid_level_md")
-	}
-	return clusterManager.SetNodeConf(config)
+	return nil
 }
 
 func showStorageValues(c *cli.Context) error {
-	if !c.Parent().Parent().IsSet("node_id") {
-		err := errors.New("--node_id must be set")
+	if !c.Parent().Parent().IsSet("node_id") && !c.Parent().Parent().IsSet("all") {
+		err := errors.New("--node_id must be provided or --all must be set")
 		logrus.Error(err)
 		return err
 	}
-	config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
-	if err != nil {
-		logrus.Error(err)
-		return err
+	configs := new(osdconfig.NodesConfig)
+	var err error
+	if c.Parent().Parent().IsSet("all") {
+		configs, err = clusterManager.EnumerateNodeConf()
+		if err != nil {
+			return err
+		}
+	} else {
+		config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		*configs = append(*configs, config)
 	}
-	if config == nil {
-		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
-	if config.Storage == nil {
-		err := errors.New("config.Storage" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
+	for _, config := range *configs {
+		if config == nil {
+			err := errors.New("config" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
+		if config.Storage == nil {
+			err := errors.New("config.Storage" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
 
-	if c.GlobalBool("json") {
-		return printJson(config.Storage)
-	}
-	if c.IsSet("all") || c.IsSet("devices_md") {
-		fmt.Println("devices_md:", config.Storage.DevicesMd)
-	}
-	if c.IsSet("all") || c.IsSet("devices") {
-		fmt.Println("devices:", config.Storage.Devices)
-	}
-	if c.IsSet("all") || c.IsSet("max_count") {
-		fmt.Println("max_count:", config.Storage.MaxCount)
-	}
-	if c.IsSet("all") || c.IsSet("max_drive_set_count") {
-		fmt.Println("max_drive_set_count:", config.Storage.MaxDriveSetCount)
-	}
-	if c.IsSet("all") || c.IsSet("raid_level") {
-		fmt.Println("raid_level:", config.Storage.RaidLevel)
-	}
-	if c.IsSet("all") || c.IsSet("raid_level_md") {
-		fmt.Println("raid_level_md:", config.Storage.RaidLevelMd)
+		if c.GlobalBool("json") {
+			if err := printJson(struct {
+				NodeId string      `json:"node_id"`
+				Config interface{} `json:"config"`
+			}{config.NodeId, config.Storage}); err != nil {
+				return err
+			}
+		} else {
+			if c.IsSet("all") || c.IsSet("devices_md") {
+				fmt.Println("devices_md:", config.Storage.DevicesMd)
+			}
+			if c.IsSet("all") || c.IsSet("devices") {
+				fmt.Println("devices:", config.Storage.Devices)
+			}
+			if c.IsSet("all") || c.IsSet("max_count") {
+				fmt.Println("max_count:", config.Storage.MaxCount)
+			}
+			if c.IsSet("all") || c.IsSet("max_drive_set_count") {
+				fmt.Println("max_drive_set_count:", config.Storage.MaxDriveSetCount)
+			}
+			if c.IsSet("all") || c.IsSet("raid_level") {
+				fmt.Println("raid_level:", config.Storage.RaidLevel)
+			}
+			if c.IsSet("all") || c.IsSet("raid_level_md") {
+				fmt.Println("raid_level_md:", config.Storage.RaidLevelMd)
+			}
+		}
 	}
 	return nil
 }
 
 func setGeoValues(c *cli.Context) error {
-	if !c.Parent().IsSet("node_id") {
-		err := errors.New("--node_id must be set")
+	if !c.Parent().IsSet("node_id") && !c.Parent().IsSet("all") {
+		err := errors.New("--node_id must be provided or --all must be set")
 		logrus.Error(err)
 		return err
 	}
-	config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
-	if err != nil {
-		logrus.Error(err)
-		return err
+	configs := new(osdconfig.NodesConfig)
+	var err error
+	if c.Parent().IsSet("all") {
+		configs, err = clusterManager.EnumerateNodeConf()
+		if err != nil {
+			return err
+		}
+	} else {
+		config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		*configs = append(*configs, config)
 	}
-	if config == nil {
-		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
-	if config.Geo == nil {
-		err := errors.New("config.Geo" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
+	for _, config := range *configs {
+		if config == nil {
+			err := errors.New("config" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
+		if config.Geo == nil {
+			err := errors.New("config.Geo" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
 
-	if c.IsSet("rack") {
-		config.Geo.Rack = c.String("rack")
+		if c.IsSet("rack") {
+			config.Geo.Rack = c.String("rack")
+		}
+		if c.IsSet("zone") {
+			config.Geo.Zone = c.String("zone")
+		}
+		if c.IsSet("region") {
+			config.Geo.Region = c.String("region")
+		}
+		if err := clusterManager.SetNodeConf(config); err != nil {
+			return nil
+		}
 	}
-	if c.IsSet("zone") {
-		config.Geo.Zone = c.String("zone")
-	}
-	if c.IsSet("region") {
-		config.Geo.Region = c.String("region")
-	}
-	return clusterManager.SetNodeConf(config)
+	return nil
 }
 
 func showGeoValues(c *cli.Context) error {
-	if !c.Parent().Parent().IsSet("node_id") {
-		err := errors.New("--node_id must be set")
+	if !c.Parent().Parent().IsSet("node_id") && !c.Parent().Parent().IsSet("all") {
+		err := errors.New("--node_id must be provided or --all must be set")
 		logrus.Error(err)
 		return err
 	}
-	config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
-	if err != nil {
-		logrus.Error(err)
-		return err
+	configs := new(osdconfig.NodesConfig)
+	var err error
+	if c.Parent().Parent().IsSet("all") {
+		configs, err = clusterManager.EnumerateNodeConf()
+		if err != nil {
+			return err
+		}
+	} else {
+		config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		*configs = append(*configs, config)
 	}
-	if config == nil {
-		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
-	if config.Geo == nil {
-		err := errors.New("config.Geo" + ": no data found, received nil pointer")
-		logrus.Error(err)
-		return err
-	}
+	for _, config := range *configs {
+		if config == nil {
+			err := errors.New("config" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
+		if config.Geo == nil {
+			err := errors.New("config.Geo" + ": no data found, received nil pointer")
+			logrus.Error(err)
+			return err
+		}
 
-	if c.GlobalBool("json") {
-		return printJson(config.Geo)
-	}
-	if c.IsSet("all") || c.IsSet("rack") {
-		fmt.Println("rack:", config.Geo.Rack)
-	}
-	if c.IsSet("all") || c.IsSet("zone") {
-		fmt.Println("zone:", config.Geo.Zone)
-	}
-	if c.IsSet("all") || c.IsSet("region") {
-		fmt.Println("region:", config.Geo.Region)
+		if c.GlobalBool("json") {
+			if err := printJson(struct {
+				NodeId string      `json:"node_id"`
+				Config interface{} `json:"config"`
+			}{config.NodeId, config.Geo}); err != nil {
+				return err
+			}
+		} else {
+			if c.IsSet("all") || c.IsSet("rack") {
+				fmt.Println("rack:", config.Geo.Rack)
+			}
+			if c.IsSet("all") || c.IsSet("zone") {
+				fmt.Println("zone:", config.Geo.Zone)
+			}
+			if c.IsSet("all") || c.IsSet("region") {
+				fmt.Println("region:", config.Geo.Region)
+			}
+		}
 	}
 	return nil
 }
