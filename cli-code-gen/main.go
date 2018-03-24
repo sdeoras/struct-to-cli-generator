@@ -107,10 +107,10 @@ func (m *manager) DeleteNodeConf(nodeId string) error {
 	return nil
 }
 
-var clusterManager *manager
+var osdconfigCaller *manager
 
 func main() {
-	clusterManager = new(manager)
+	osdconfigCaller = new(manager)
 
 	fileInfo, err := os.Stat("/tmp/config.json")
 	if err == nil && fileInfo.IsDir() {
@@ -272,13 +272,13 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		fmt.Fprintln(fw, "\t", "configs := new(osdconfig.NodesConfig)")
 		fmt.Fprintln(fw, "\t", "var err error")
 		fmt.Fprintln(fw, "\t", "if "+s+".IsSet(\"all\") {")
-		fmt.Fprintln(fw, "\t\t", "configs, err = clusterManager.EnumerateNodeConf()")
+		fmt.Fprintln(fw, "\t\t", "configs, err = osdconfigCaller.EnumerateNodeConf()")
 		fmt.Fprintln(fw, "\t\t", "if err != nil {")
 		fmt.Fprintln(fw, "\t\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t\t", "return err")
 		fmt.Fprintln(fw, "\t\t", "}")
 		fmt.Fprintln(fw, "\t", "} else {")
-		fmt.Fprintln(fw, "\t\t", "config, err := clusterManager.GetNodeConf("+s+".String(\"node_id\")"+")")
+		fmt.Fprintln(fw, "\t\t", "config, err := osdconfigCaller.GetNodeConf("+s+".String(\"node_id\")"+")")
 		fmt.Fprintln(fw, "\t\t", "if err != nil {")
 		fmt.Fprintln(fw, "\t\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t\t", "return err")
@@ -288,7 +288,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		fmt.Fprintln(fw, "\t\t", "for _, config := range *configs {")
 		fmt.Fprintln(fw, "\t\t\t", "config := config")
 	} else {
-		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetClusterConf()")
+		fmt.Fprintln(fw, "\t", "config, err := osdconfigCaller.GetClusterConf()")
 		fmt.Fprintln(fw, "\t", "if err != nil {")
 		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t", "return err")
@@ -333,7 +333,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 	}
 
 	if prefixOrigin[prefix] == "node" {
-		fmt.Fprintln(fw, "\t\t\t", "if err := clusterManager.SetNodeConf(config); err != nil {")
+		fmt.Fprintln(fw, "\t\t\t", "if err := osdconfigCaller.SetNodeConf(config); err != nil {")
 		fmt.Fprintln(fw, "\t\t\t\t", "logrus.Error(\"Set config for node: \", config.NodeId)")
 		fmt.Fprintln(fw, "\t\t\t\t", "return err")
 		fmt.Fprintln(fw, "\t\t\t", "}")
@@ -341,7 +341,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		fmt.Fprintln(fw, "\t\t", "}")
 		fmt.Fprintln(fw, "\t", "return nil")
 	} else {
-		fmt.Fprintln(fw, "\t", "if err := clusterManager.SetClusterConf(config); err != nil {")
+		fmt.Fprintln(fw, "\t", "if err := osdconfigCaller.SetClusterConf(config); err != nil {")
 		fmt.Fprintln(fw, "\t\t", "logrus.Error(\"Set config for cluster\")")
 		fmt.Fprintln(fw, "\t\t", "return err")
 		fmt.Fprintln(fw, "\t", "}")
@@ -373,13 +373,13 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		fmt.Fprintln(fw, "\t", "configs := new(osdconfig.NodesConfig)")
 		fmt.Fprintln(fw, "\t", "var err error")
 		fmt.Fprintln(fw, "\t", "if "+s+".IsSet(\"all\") {")
-		fmt.Fprintln(fw, "\t\t", "configs, err = clusterManager.EnumerateNodeConf()")
+		fmt.Fprintln(fw, "\t\t", "configs, err = osdconfigCaller.EnumerateNodeConf()")
 		fmt.Fprintln(fw, "\t\t", "if err != nil {")
 		fmt.Fprintln(fw, "\t\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t\t", "return err")
 		fmt.Fprintln(fw, "\t\t", "}")
 		fmt.Fprintln(fw, "\t", "} else {")
-		fmt.Fprintln(fw, "\t\t", "config, err := clusterManager.GetNodeConf("+s+".String(\"node_id\")"+")")
+		fmt.Fprintln(fw, "\t\t", "config, err := osdconfigCaller.GetNodeConf("+s+".String(\"node_id\")"+")")
 		fmt.Fprintln(fw, "\t\t", "if err != nil {")
 		fmt.Fprintln(fw, "\t\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t\t", "return err")
@@ -388,7 +388,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		fmt.Fprintln(fw, "\t", "}")
 		fmt.Fprintln(fw, "\t", "for _, config := range *configs {")
 	} else {
-		fmt.Fprintln(fw, "\t", "config, err := clusterManager.GetClusterConf()")
+		fmt.Fprintln(fw, "\t", "config, err := osdconfigCaller.GetClusterConf()")
 		fmt.Fprintln(fw, "\t", "if err != nil {")
 		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
 		fmt.Fprintln(fw, "\t\t", "return err")
@@ -401,6 +401,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		fmt.Fprintln(fw, "\t\t\t", "return err")
 		fmt.Fprintln(fw, "\t\t", "}")
 		fmt.Fprintln(fw, "\t", "} else {")
+		fmt.Fprintln(fw, "\t\t", "fmt.Println(\"node_id:\", config.NodeId)")
 	} else {
 		fmt.Fprintln(fw, "\t\t", "return printJson("+prefix2VarName[prefix]+")")
 	}
@@ -448,6 +449,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		}
 	}
 	if prefixOrigin[prefix] == "node" {
+		fmt.Fprintln(fw, "\t\t\t", "fmt.Println()")
 		fmt.Fprintln(fw, "\t\t", "}")
 		fmt.Fprintln(fw, "\t", "}")
 	}

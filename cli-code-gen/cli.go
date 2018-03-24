@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	"github.com/libopenstorage/openstorage/osdconfig"
-	"github.com/urfave/cli"
 	"io/ioutil"
 	"os"
 	"strconv"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/urfave/cli"
 )
 
 type manager struct{}
@@ -86,10 +87,10 @@ func (m *manager) DeleteNodeConf(nodeId string) error {
 	return nil
 }
 
-var clusterManager *manager
+var osdconfigCaller *manager
 
 func main() {
-	clusterManager = new(manager)
+	osdconfigCaller = new(manager)
 
 	fileInfo, err := os.Stat("/tmp/config.json")
 	if err == nil && fileInfo.IsDir() {
@@ -141,8 +142,8 @@ func main() {
 		{
 			Name:        "config",
 			Usage:       "Configure cluster",
-			Description: "Configure cluster and nodes. Node ID is required for node configuration. Get node id using pxctl status",
-			Hidden:      false,
+			Description: "Configure cluster and nodes",
+			Hidden:      true,
 			Action:      setConfigValues,
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -683,7 +684,7 @@ func main() {
 	app.Run(os.Args)
 }
 func setConfigValues(c *cli.Context) error {
-	config, err := clusterManager.GetClusterConf()
+	config, err := osdconfigCaller.GetClusterConf()
 	if err != nil {
 		logrus.Error(err)
 		return err
@@ -709,7 +710,7 @@ func setConfigValues(c *cli.Context) error {
 	if c.IsSet("domain") {
 		config.Domain = c.String("domain")
 	}
-	if err := clusterManager.SetClusterConf(config); err != nil {
+	if err := osdconfigCaller.SetClusterConf(config); err != nil {
 		logrus.Error("Set config for cluster")
 		return err
 	}
@@ -718,7 +719,7 @@ func setConfigValues(c *cli.Context) error {
 }
 
 func showConfigValues(c *cli.Context) error {
-	config, err := clusterManager.GetClusterConf()
+	config, err := osdconfigCaller.GetClusterConf()
 	if err != nil {
 		logrus.Error(err)
 		return err
@@ -762,13 +763,13 @@ func setNodeValues(c *cli.Context) error {
 	configs := new(osdconfig.NodesConfig)
 	var err error
 	if c.IsSet("all") {
-		configs, err = clusterManager.EnumerateNodeConf()
+		configs, err = osdconfigCaller.EnumerateNodeConf()
 		if err != nil {
 			logrus.Error(err)
 			return err
 		}
 	} else {
-		config, err := clusterManager.GetNodeConf(c.String("node_id"))
+		config, err := osdconfigCaller.GetNodeConf(c.String("node_id"))
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -789,7 +790,7 @@ func setNodeValues(c *cli.Context) error {
 		if c.IsSet("csi_endpoint") {
 			config.CSIEndpoint = c.String("csi_endpoint")
 		}
-		if err := clusterManager.SetNodeConf(config); err != nil {
+		if err := osdconfigCaller.SetNodeConf(config); err != nil {
 			logrus.Error("Set config for node: ", config.NodeId)
 			return err
 		}
@@ -807,13 +808,13 @@ func showNodeValues(c *cli.Context) error {
 	configs := new(osdconfig.NodesConfig)
 	var err error
 	if c.Parent().IsSet("all") {
-		configs, err = clusterManager.EnumerateNodeConf()
+		configs, err = osdconfigCaller.EnumerateNodeConf()
 		if err != nil {
 			logrus.Error(err)
 			return err
 		}
 	} else {
-		config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
+		config, err := osdconfigCaller.GetNodeConf(c.Parent().String("node_id"))
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -835,12 +836,14 @@ func showNodeValues(c *cli.Context) error {
 				return err
 			}
 		} else {
+			fmt.Println("node_id:", config.NodeId)
 			if c.IsSet("all") || c.IsSet("node_id") {
 				fmt.Println("node_id:", config.NodeId)
 			}
 			if c.IsSet("all") || c.IsSet("csi_endpoint") {
 				fmt.Println("csi_endpoint:", config.CSIEndpoint)
 			}
+			fmt.Println()
 		}
 	}
 	return nil
@@ -855,13 +858,13 @@ func setNetworkValues(c *cli.Context) error {
 	configs := new(osdconfig.NodesConfig)
 	var err error
 	if c.Parent().IsSet("all") {
-		configs, err = clusterManager.EnumerateNodeConf()
+		configs, err = osdconfigCaller.EnumerateNodeConf()
 		if err != nil {
 			logrus.Error(err)
 			return err
 		}
 	} else {
-		config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
+		config, err := osdconfigCaller.GetNodeConf(c.Parent().String("node_id"))
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -887,7 +890,7 @@ func setNetworkValues(c *cli.Context) error {
 		if c.IsSet("data_interface") {
 			config.Network.DataIface = c.String("data_interface")
 		}
-		if err := clusterManager.SetNodeConf(config); err != nil {
+		if err := osdconfigCaller.SetNodeConf(config); err != nil {
 			logrus.Error("Set config for node: ", config.NodeId)
 			return err
 		}
@@ -905,13 +908,13 @@ func showNetworkValues(c *cli.Context) error {
 	configs := new(osdconfig.NodesConfig)
 	var err error
 	if c.Parent().Parent().IsSet("all") {
-		configs, err = clusterManager.EnumerateNodeConf()
+		configs, err = osdconfigCaller.EnumerateNodeConf()
 		if err != nil {
 			logrus.Error(err)
 			return err
 		}
 	} else {
-		config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
+		config, err := osdconfigCaller.GetNodeConf(c.Parent().Parent().String("node_id"))
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -938,12 +941,14 @@ func showNetworkValues(c *cli.Context) error {
 				return err
 			}
 		} else {
+			fmt.Println("node_id:", config.NodeId)
 			if c.IsSet("all") || c.IsSet("mgt_interface") {
 				fmt.Println("mgt_interface:", config.Network.MgtIface)
 			}
 			if c.IsSet("all") || c.IsSet("data_interface") {
 				fmt.Println("data_interface:", config.Network.DataIface)
 			}
+			fmt.Println()
 		}
 	}
 	return nil
@@ -958,13 +963,13 @@ func setStorageValues(c *cli.Context) error {
 	configs := new(osdconfig.NodesConfig)
 	var err error
 	if c.Parent().IsSet("all") {
-		configs, err = clusterManager.EnumerateNodeConf()
+		configs, err = osdconfigCaller.EnumerateNodeConf()
 		if err != nil {
 			logrus.Error(err)
 			return err
 		}
 	} else {
-		config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
+		config, err := osdconfigCaller.GetNodeConf(c.Parent().String("node_id"))
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -1002,7 +1007,7 @@ func setStorageValues(c *cli.Context) error {
 		if c.IsSet("raid_level_md") {
 			config.Storage.RaidLevelMd = c.String("raid_level_md")
 		}
-		if err := clusterManager.SetNodeConf(config); err != nil {
+		if err := osdconfigCaller.SetNodeConf(config); err != nil {
 			logrus.Error("Set config for node: ", config.NodeId)
 			return err
 		}
@@ -1020,13 +1025,13 @@ func showStorageValues(c *cli.Context) error {
 	configs := new(osdconfig.NodesConfig)
 	var err error
 	if c.Parent().Parent().IsSet("all") {
-		configs, err = clusterManager.EnumerateNodeConf()
+		configs, err = osdconfigCaller.EnumerateNodeConf()
 		if err != nil {
 			logrus.Error(err)
 			return err
 		}
 	} else {
-		config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
+		config, err := osdconfigCaller.GetNodeConf(c.Parent().Parent().String("node_id"))
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -1053,6 +1058,7 @@ func showStorageValues(c *cli.Context) error {
 				return err
 			}
 		} else {
+			fmt.Println("node_id:", config.NodeId)
 			if c.IsSet("all") || c.IsSet("devices_md") {
 				fmt.Println("devices_md:", config.Storage.DevicesMd)
 			}
@@ -1071,6 +1077,7 @@ func showStorageValues(c *cli.Context) error {
 			if c.IsSet("all") || c.IsSet("raid_level_md") {
 				fmt.Println("raid_level_md:", config.Storage.RaidLevelMd)
 			}
+			fmt.Println()
 		}
 	}
 	return nil
@@ -1085,13 +1092,13 @@ func setGeoValues(c *cli.Context) error {
 	configs := new(osdconfig.NodesConfig)
 	var err error
 	if c.Parent().IsSet("all") {
-		configs, err = clusterManager.EnumerateNodeConf()
+		configs, err = osdconfigCaller.EnumerateNodeConf()
 		if err != nil {
 			logrus.Error(err)
 			return err
 		}
 	} else {
-		config, err := clusterManager.GetNodeConf(c.Parent().String("node_id"))
+		config, err := osdconfigCaller.GetNodeConf(c.Parent().String("node_id"))
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -1120,7 +1127,7 @@ func setGeoValues(c *cli.Context) error {
 		if c.IsSet("region") {
 			config.Geo.Region = c.String("region")
 		}
-		if err := clusterManager.SetNodeConf(config); err != nil {
+		if err := osdconfigCaller.SetNodeConf(config); err != nil {
 			logrus.Error("Set config for node: ", config.NodeId)
 			return err
 		}
@@ -1138,13 +1145,13 @@ func showGeoValues(c *cli.Context) error {
 	configs := new(osdconfig.NodesConfig)
 	var err error
 	if c.Parent().Parent().IsSet("all") {
-		configs, err = clusterManager.EnumerateNodeConf()
+		configs, err = osdconfigCaller.EnumerateNodeConf()
 		if err != nil {
 			logrus.Error(err)
 			return err
 		}
 	} else {
-		config, err := clusterManager.GetNodeConf(c.Parent().Parent().String("node_id"))
+		config, err := osdconfigCaller.GetNodeConf(c.Parent().Parent().String("node_id"))
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -1171,6 +1178,7 @@ func showGeoValues(c *cli.Context) error {
 				return err
 			}
 		} else {
+			fmt.Println("node_id:", config.NodeId)
 			if c.IsSet("all") || c.IsSet("rack") {
 				fmt.Println("rack:", config.Geo.Rack)
 			}
@@ -1180,13 +1188,14 @@ func showGeoValues(c *cli.Context) error {
 			if c.IsSet("all") || c.IsSet("region") {
 				fmt.Println("region:", config.Geo.Region)
 			}
+			fmt.Println()
 		}
 	}
 	return nil
 }
 
 func setSecretsValues(c *cli.Context) error {
-	config, err := clusterManager.GetClusterConf()
+	config, err := osdconfigCaller.GetClusterConf()
 	if err != nil {
 		logrus.Error(err)
 		return err
@@ -1208,7 +1217,7 @@ func setSecretsValues(c *cli.Context) error {
 	if c.IsSet("cluster_secret_key") {
 		config.Secrets.ClusterSecretKey = c.String("cluster_secret_key")
 	}
-	if err := clusterManager.SetClusterConf(config); err != nil {
+	if err := osdconfigCaller.SetClusterConf(config); err != nil {
 		logrus.Error("Set config for cluster")
 		return err
 	}
@@ -1217,7 +1226,7 @@ func setSecretsValues(c *cli.Context) error {
 }
 
 func showSecretsValues(c *cli.Context) error {
-	config, err := clusterManager.GetClusterConf()
+	config, err := osdconfigCaller.GetClusterConf()
 	if err != nil {
 		logrus.Error(err)
 		return err
@@ -1246,7 +1255,7 @@ func showSecretsValues(c *cli.Context) error {
 }
 
 func setVaultValues(c *cli.Context) error {
-	config, err := clusterManager.GetClusterConf()
+	config, err := osdconfigCaller.GetClusterConf()
 	if err != nil {
 		logrus.Error(err)
 		return err
@@ -1294,7 +1303,7 @@ func setVaultValues(c *cli.Context) error {
 	if c.IsSet("base_path") {
 		config.Secrets.Vault.BasePath = c.String("base_path")
 	}
-	if err := clusterManager.SetClusterConf(config); err != nil {
+	if err := osdconfigCaller.SetClusterConf(config); err != nil {
 		logrus.Error("Set config for cluster")
 		return err
 	}
@@ -1303,7 +1312,7 @@ func setVaultValues(c *cli.Context) error {
 }
 
 func showVaultValues(c *cli.Context) error {
-	config, err := clusterManager.GetClusterConf()
+	config, err := osdconfigCaller.GetClusterConf()
 	if err != nil {
 		logrus.Error(err)
 		return err
@@ -1358,7 +1367,7 @@ func showVaultValues(c *cli.Context) error {
 }
 
 func setAwsValues(c *cli.Context) error {
-	config, err := clusterManager.GetClusterConf()
+	config, err := osdconfigCaller.GetClusterConf()
 	if err != nil {
 		logrus.Error(err)
 		return err
@@ -1394,7 +1403,7 @@ func setAwsValues(c *cli.Context) error {
 	if c.IsSet("aws_region") {
 		config.Secrets.Aws.Region = c.String("aws_region")
 	}
-	if err := clusterManager.SetClusterConf(config); err != nil {
+	if err := osdconfigCaller.SetClusterConf(config); err != nil {
 		logrus.Error("Set config for cluster")
 		return err
 	}
@@ -1403,7 +1412,7 @@ func setAwsValues(c *cli.Context) error {
 }
 
 func showAwsValues(c *cli.Context) error {
-	config, err := clusterManager.GetClusterConf()
+	config, err := osdconfigCaller.GetClusterConf()
 	if err != nil {
 		logrus.Error(err)
 		return err
