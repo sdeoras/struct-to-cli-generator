@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"os"
 
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/sdeoras/configio"
 	"github.com/sdeoras/configio/configfile"
@@ -31,7 +33,7 @@ func (c *configData) Unmarshal(b []byte) error {
 }
 
 func main() {
-	logrus.SetLevel(logrus.ErrorLevel)
+	logrus.SetLevel(logrus.FatalLevel)
 	log := logrus.WithField("func", "main").WithField("manager", "cli")
 
 	appName := "cli"
@@ -66,6 +68,7 @@ func main() {
 		}
 	}
 
+	logrus.SetLevel(logrus.ErrorLevel)
 	app := cli.NewApp()
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
@@ -85,6 +88,12 @@ func main() {
 				},
 			},
 			Action: initConfigValues,
+		},
+		{
+			Name:        "watch",
+			Usage:       "watch for config changes",
+			Description: "watch for config changes",
+			Action:      watchConfigValues,
 		},
 		// header
 		{
@@ -242,6 +251,41 @@ func main() {
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func watchConfigValues(c *cli.Context) error {
+	config := new(Data).Init()
+	f := func(ctx context.Context, data interface{}, err error) <-chan error {
+		done := make(chan error)
+		if err := manager.Unmarshal(config); err != nil {
+			done <- err
+			return done
+		}
+
+		if jb, err := config.Marshal(); err != nil {
+			done <- err
+			return done
+		} else {
+			fmt.Println(string(jb))
+		}
+
+		done <- nil
+		return done
+	}
+
+	trigger := manager.Watch("cliWatch", nil, f)
+	cc := make(chan os.Signal, 2)
+	signal.Notify(cc, os.Interrupt, syscall.SIGTERM)
+
+	logrus.SetLevel(logrus.InfoLevel)
+	for {
+		select {
+		case <-trigger:
+		case <-cc:
+			logrus.SetLevel(logrus.ErrorLevel)
+			return nil
+		}
 	}
 }
 
