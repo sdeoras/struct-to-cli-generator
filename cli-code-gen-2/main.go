@@ -140,17 +140,12 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 	fmt.Fprintln(cw, tabs(tab, 1), "Action:", getCamelCase("set_"+prefix+"_values,"))
 
 	fmt.Fprintln(fw, "func", getCamelCase("set_"+prefix+"_values(c *cli.Context) error {"))
+	fmt.Fprintln(fw, "\t", "log := logrus.WithField(\"func\", \""+getCamelCase("set_"+prefix+"_values")+"\").WithField(\"manager\", \"cli\")")
 
 	getConfig(fw, dtype)
 
 	fmt.Fprintln(fw, nullChecker(prefix2VarName[prefix]+".field"))
 	fmt.Fprintln(cw, tabs(tab, 1), "Flags: []cli.Flag{")
-	if prefix == "node" {
-		fmt.Fprintln(cw, tabs(tab, 2), "cli.BoolFlag{")
-		fmt.Fprintln(cw, tabs(tab, 3), "Name:", "\""+"all, a"+"\",")
-		fmt.Fprintln(cw, tabs(tab, 3), "Usage: \"(Bool)\\tFor all nodes on cluster\",")
-		fmt.Fprintln(cw, tabs(tab, 2), "},")
-	}
 
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
@@ -182,10 +177,9 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 	}
 
 	fmt.Fprintln(fw, "\t", "if err := manager.Marshal(config); err != nil {")
-	fmt.Fprintln(fw, "\t\t", "logrus.Error(\"Set config for cluster\")")
+	fmt.Fprintln(fw, "\t\t", "log.Error(err)")
 	fmt.Fprintln(fw, "\t\t", "return err")
 	fmt.Fprintln(fw, "\t", "}")
-	fmt.Fprintln(fw, "\t", "logrus.Info(\"Set config for cluster\")")
 	fmt.Fprintln(fw, "\t", "return nil")
 
 	fmt.Fprintln(fw, "}")
@@ -200,6 +194,7 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 	fmt.Fprintln(cw, tabs(tab, 3), "Action:", getCamelCase("show_"+prefix+"_values,"))
 
 	fmt.Fprintln(fw, "func", getCamelCase("show_"+prefix+"_values(c *cli.Context) error {"))
+	fmt.Fprintln(fw, "\t", "log := logrus.WithField(\"func\", \""+getCamelCase("show_"+prefix+"_values")+"\").WithField(\"manager\", \"cli\")")
 
 	getConfig(fw, dtype)
 
@@ -406,7 +401,7 @@ func nullChecker(input string) string {
 		s += fmt.Sprintln("\t",
 			"if",
 			field, "== nil {\n\t\terr := errors.New(\""+field+"\"+\": no data found, received nil pointer\")\n"+
-				"\t\tlogrus.Error(err)\n\t\treturn err\n\t}")
+				"\t\tlog.Error(err)\n\t\treturn err\n\t}")
 		field += "."
 		field += fields[i+1]
 	}
@@ -417,7 +412,7 @@ func nullChecker(input string) string {
 func getConfig(fw *bufio.Writer, dtype string) {
 	fmt.Fprintln(fw, "\t", "config := new("+dtype+").Init()")
 	fmt.Fprintln(fw, "\t", "if err := manager.Unmarshal(config); err != nil {")
-	fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
+	fmt.Fprintln(fw, "\t\t", "log.Error(err)")
 	fmt.Fprintln(fw, "\t\t", "return err")
 	fmt.Fprintln(fw, "\t", "}")
 }

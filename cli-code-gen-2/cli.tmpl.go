@@ -31,6 +31,7 @@ func (c *configData) Unmarshal(b []byte) error {
 
 func main() {
     logrus.SetLevel(logrus.ErrorLevel)
+    log := logrus.WithField("func", "main").WithField("manager", "cli")
 
 	appName := "cli"
 	d := new(configData)
@@ -39,18 +40,28 @@ func main() {
 	configManager, err = configfile.NewManager(context.Background(), "file",
 		filepath.Join(os.Getenv("HOME"), ".config", appName, "config.json"))
 	if err != nil {
-		logrus.Fatal(err)
+		log.Fatal(err)
 	}
 
 	if err := configManager.Unmarshal(d); err == nil {
-		manager, err = configfile.NewManager(context.Background(), "file", d.File)
-		if err != nil {
-			logrus.Fatal(err)
+		if len(d.File) > 0 {
+			manager, err = configfile.NewManager(context.Background(), "file", d.File)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			manager, err = configfile.NewManager(context.Background())
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	} else {
+		if err := configManager.Marshal(d); err != nil {
+			log.Fatal(err)
+		}
 		manager, err = configfile.NewManager(context.Background())
 		if err != nil {
-			logrus.Fatal(err)
+			log.Fatal(err)
 		}
 	}
 
@@ -77,7 +88,7 @@ func main() {
 		{{.Commands}}
 	}
 	if err := app.Run(os.Args); err != nil {
-		logrus.Fatal(err)
+		log.Fatal(err)
 	}
 }
 

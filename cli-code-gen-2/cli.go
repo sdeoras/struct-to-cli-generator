@@ -32,6 +32,7 @@ func (c *configData) Unmarshal(b []byte) error {
 
 func main() {
 	logrus.SetLevel(logrus.ErrorLevel)
+	log := logrus.WithField("func", "main").WithField("manager", "cli")
 
 	appName := "cli"
 	d := new(configData)
@@ -40,18 +41,28 @@ func main() {
 	configManager, err = configfile.NewManager(context.Background(), "file",
 		filepath.Join(os.Getenv("HOME"), ".config", appName, "config.json"))
 	if err != nil {
-		logrus.Fatal(err)
+		log.Fatal(err)
 	}
 
 	if err := configManager.Unmarshal(d); err == nil {
-		manager, err = configfile.NewManager(context.Background(), "file", d.File)
-		if err != nil {
-			logrus.Fatal(err)
+		if len(d.File) > 0 {
+			manager, err = configfile.NewManager(context.Background(), "file", d.File)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			manager, err = configfile.NewManager(context.Background())
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	} else {
+		if err := configManager.Marshal(d); err != nil {
+			log.Fatal(err)
+		}
 		manager, err = configfile.NewManager(context.Background())
 		if err != nil {
-			logrus.Fatal(err)
+			log.Fatal(err)
 		}
 	}
 
@@ -230,7 +241,7 @@ func main() {
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
-		logrus.Fatal(err)
+		log.Fatal(err)
 	}
 }
 
@@ -264,14 +275,15 @@ func initConfigValues(c *cli.Context) error {
 }
 
 func setConfigValues(c *cli.Context) error {
+	log := logrus.WithField("func", "setConfigValues").WithField("manager", "cli")
 	config := new(Data).Init()
 	if err := manager.Unmarshal(config); err != nil {
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 	if config == nil {
 		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -282,22 +294,22 @@ func setConfigValues(c *cli.Context) error {
 		config.MyValue = c.Int("my-value")
 	}
 	if err := manager.Marshal(config); err != nil {
-		logrus.Error("Set config for cluster")
+		log.Error(err)
 		return err
 	}
-	logrus.Info("Set config for cluster")
 	return nil
 }
 
 func showConfigValues(c *cli.Context) error {
+	log := logrus.WithField("func", "showConfigValues").WithField("manager", "cli")
 	config := new(Data).Init()
 	if err := manager.Unmarshal(config); err != nil {
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 	if config == nil {
 		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -314,19 +326,20 @@ func showConfigValues(c *cli.Context) error {
 }
 
 func setAValues(c *cli.Context) error {
+	log := logrus.WithField("func", "setAValues").WithField("manager", "cli")
 	config := new(Data).Init()
 	if err := manager.Unmarshal(config); err != nil {
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 	if config == nil {
 		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 	if config.A == nil {
 		err := errors.New("config.A" + ": no data found, received nil pointer")
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -340,27 +353,27 @@ func setAValues(c *cli.Context) error {
 		config.A.Present = c.Bool("present")
 	}
 	if err := manager.Marshal(config); err != nil {
-		logrus.Error("Set config for cluster")
+		log.Error(err)
 		return err
 	}
-	logrus.Info("Set config for cluster")
 	return nil
 }
 
 func showAValues(c *cli.Context) error {
+	log := logrus.WithField("func", "showAValues").WithField("manager", "cli")
 	config := new(Data).Init()
 	if err := manager.Unmarshal(config); err != nil {
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 	if config == nil {
 		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 	if config.A == nil {
 		err := errors.New("config.A" + ": no data found, received nil pointer")
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -380,19 +393,20 @@ func showAValues(c *cli.Context) error {
 }
 
 func setBValues(c *cli.Context) error {
+	log := logrus.WithField("func", "setBValues").WithField("manager", "cli")
 	config := new(Data).Init()
 	if err := manager.Unmarshal(config); err != nil {
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 	if config == nil {
 		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 	if config.B == nil {
 		err := errors.New("config.B" + ": no data found, received nil pointer")
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -406,27 +420,27 @@ func setBValues(c *cli.Context) error {
 		config.B.Present = c.Bool("present")
 	}
 	if err := manager.Marshal(config); err != nil {
-		logrus.Error("Set config for cluster")
+		log.Error(err)
 		return err
 	}
-	logrus.Info("Set config for cluster")
 	return nil
 }
 
 func showBValues(c *cli.Context) error {
+	log := logrus.WithField("func", "showBValues").WithField("manager", "cli")
 	config := new(Data).Init()
 	if err := manager.Unmarshal(config); err != nil {
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 	if config == nil {
 		err := errors.New("config" + ": no data found, received nil pointer")
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 	if config.B == nil {
 		err := errors.New("config.B" + ": no data found, received nil pointer")
-		logrus.Error(err)
+		log.Error(err)
 		return err
 	}
 
