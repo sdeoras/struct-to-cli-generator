@@ -14,9 +14,9 @@ func BuildFlags(x interface{}) []cli.Flag {
 	r := reflect.Indirect(reflect.ValueOf(x))
 	F := make([]cli.Flag, 0, 0)
 	for i := 0; i < r.NumField(); i++ {
-		fmt.Print(r.Type().Field(i).Name, ", ")
+		/*fmt.Print(r.Type().Field(i).Name, ", ")
 		fmt.Print(r.Field(i).Kind().String(), ", ")
-		fmt.Println(r.Field(i).Type().String())
+		fmt.Println(r.Field(i).Type().String())*/
 
 		Tags := GetCliTags(r.Type().Field(i).Tag.Get("cli"))
 
@@ -26,7 +26,7 @@ func BuildFlags(x interface{}) []cli.Flag {
 				Name:   Tags["name"],
 				Usage:  fmt.Sprintf("(Str)\t%s", Tags["usage"]),
 				Hidden: Tags["hidden"] == "true",
-				EnvVar: fmt.Sprintf("CLI_%s", strings.ToUpper(Tags["name"])),
+				EnvVar: fmt.Sprintf("%s", strings.ToUpper(Tags["name"])),
 			}
 			F = append(F, f)
 		case reflect.Int:
@@ -34,7 +34,7 @@ func BuildFlags(x interface{}) []cli.Flag {
 				Name:   Tags["name"],
 				Usage:  fmt.Sprintf("(Int)\t%s", Tags["usage"]),
 				Hidden: Tags["hidden"] == "true",
-				EnvVar: fmt.Sprintf("CLI_%s", strings.ToUpper(Tags["name"])),
+				EnvVar: fmt.Sprintf("%s", strings.ToUpper(Tags["name"])),
 			}
 			F = append(F, f)
 		case reflect.Bool:
@@ -42,7 +42,7 @@ func BuildFlags(x interface{}) []cli.Flag {
 				Name:   Tags["name"],
 				Usage:  fmt.Sprintf("(Bool)\t%s", Tags["usage"]),
 				Hidden: Tags["hidden"] == "true",
-				EnvVar: fmt.Sprintf("CLI_%s", strings.ToUpper(Tags["name"])),
+				EnvVar: fmt.Sprintf("%s", strings.ToUpper(Tags["name"])),
 			}
 			F = append(F, f)
 		case reflect.Slice:
@@ -52,7 +52,7 @@ func BuildFlags(x interface{}) []cli.Flag {
 					Name:   Tags["name"],
 					Usage:  fmt.Sprintf("(Str...)\t%s", Tags["usage"]),
 					Hidden: Tags["hidden"] == "true",
-					EnvVar: fmt.Sprintf("CLI_%s", strings.ToUpper(Tags["name"])),
+					EnvVar: fmt.Sprintf("%s", strings.ToUpper(Tags["name"])),
 				}
 				F = append(F, f)
 			case reflect.TypeOf([]int{}):
@@ -60,7 +60,7 @@ func BuildFlags(x interface{}) []cli.Flag {
 					Name:   Tags["name"],
 					Usage:  fmt.Sprintf("(Int...)\t%s", Tags["usage"]),
 					Hidden: Tags["hidden"] == "true",
-					EnvVar: fmt.Sprintf("CLI_%s", strings.ToUpper(Tags["name"])),
+					EnvVar: fmt.Sprintf("%s", strings.ToUpper(Tags["name"])),
 				}
 				F = append(F, f)
 			}
@@ -80,7 +80,7 @@ func BuildCommand(x interface{}) []cli.Command {
 		case reflect.Struct, reflect.Ptr:
 			c := cli.Command{
 				Name:        Tags["name"],
-				Usage:       fmt.Sprintf("(Str)\t%s", Tags["usage"]),
+				Usage:       fmt.Sprintf("%s", Tags["usage"]),
 				Hidden:      Tags["hidden"] == "true",
 				Description: Tags["description"],
 				Flags:       BuildFlags(r.Field(i).Elem()),
@@ -94,20 +94,20 @@ func BuildCommand(x interface{}) []cli.Command {
 func main() {
 	type Data struct {
 		Name   string   `cli:"name=name,usage=name usage,hidden=false"`
-		Value  int      `cli:"name=value,usage=name usage,hidden=false"`
-		Names  []string `cli:"name=names,usage=name usage,hidden=false"`
-		Values []int    `cli:"name=values,usage=name usage,hidden=false"`
-		Flag   bool     `cli:"name=flag,usage=name usage,hidden=false"`
+		Value  int      `cli:"name=value,usage=value usage,hidden=false"`
+		Names  []string `cli:"name=names,usage=names usage,hidden=false"`
+		Values []int    `cli:"name=values,usage=values usage,hidden=false"`
+		Flag   bool     `cli:"name=flag,usage=flag usage,hidden=false"`
 	}
 
 	type Data2 struct {
-		A Data
-		B Data
+		A *Data `cli:"name=a,usage=a usage,hidden=false"`
+		B *Data `cli:"name=b,usage=b usage,hidden=false"`
 	}
 
 	app := cli.NewApp()
 	app.Flags = BuildFlags(Data{})
-	app.Commands = BuildCommand(Data2{})
+	app.Commands = BuildCommand(new(Data2))
 	app.Run(os.Args)
 }
 

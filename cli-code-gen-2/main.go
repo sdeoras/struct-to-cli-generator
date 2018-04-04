@@ -9,9 +9,8 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"text/template"
 	"time"
-
-	"github.com/libopenstorage/openstorage/osdconfig"
 )
 
 var prefix2VarName map[string]string
@@ -19,152 +18,13 @@ var prefixOrigin map[string]string
 var prefixDepth map[string]int
 var cw *bufio.Writer
 var fw *bufio.Writer
-var header = `package main
-
-import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/libopenstorage/openstorage/osdconfig"
-	"github.com/urfave/cli"
-	"io/ioutil"
-	"os"
-	"strconv"
-)
-
-type manager struct{}
-
-func (m *manager) GetClusterConf() (*osdconfig.ClusterConfig, error) {
-	config := new(osdconfig.ClusterConfig)
-	if b, err := ioutil.ReadFile("/tmp/config.json"); err != nil {
-		return nil, err
-	} else {
-		if err := json.Unmarshal(b, config); err != nil {
-			return nil, err
-		}
-	}
-	return config, nil
-}
-func (m *manager) GetNodeConf(id string) (*osdconfig.NodeConfig, error) {
-	configMap := make(map[string]*osdconfig.NodeConfig)
-	if b, err := ioutil.ReadFile("/tmp/nodeConfig.json"); err != nil {
-		return nil, err
-	} else {
-		if err := json.Unmarshal(b, &configMap); err != nil {
-			return nil, err
-		}
-	}
-	return configMap[id], nil
-}
-func (m *manager) SetClusterConf(config *osdconfig.ClusterConfig) error {
-	if b, err := json.Marshal(config); err != nil {
-		return err
-	} else {
-		if err := ioutil.WriteFile("/tmp/config.json", b, 0666); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-func (m *manager) SetNodeConf(config *osdconfig.NodeConfig) error {
-	configMap := make(map[string]*osdconfig.NodeConfig)
-	if b, err := ioutil.ReadFile("/tmp/nodeConfig.json"); err != nil {
-		logrus.Warn(err)
-	} else {
-		if err := json.Unmarshal(b, &configMap); err != nil {
-			logrus.Warn(err)
-		}
-	}
-	configMap[config.NodeId] = config
-	if b, err := json.Marshal(configMap); err != nil {
-		return err
-	} else {
-		if err := ioutil.WriteFile("/tmp/nodeConfig.json", b, 0666); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (m *manager) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
-	configMap := make(map[string]*osdconfig.NodeConfig)
-	if b, err := ioutil.ReadFile("/tmp/nodeConfig.json"); err != nil {
-		return nil, err
-	} else {
-		if err := json.Unmarshal(b, &configMap); err != nil {
-			return nil, err
-		}
-	}
-	nodesConfig := new(osdconfig.NodesConfig)
-	for _, val := range configMap {
-		*nodesConfig = append(*nodesConfig, val)
-	}
-	return nodesConfig, nil
-}
-
-func (m *manager) DeleteNodeConf(nodeId string) error {
-	return nil
-}
-
-var osdconfigCaller *manager
-
-func main() {
-	osdconfigCaller = new(manager)
-
-	fileInfo, err := os.Stat("/tmp/config.json")
-	if err == nil && fileInfo.IsDir() {
-		logrus.Fatal("log file is a dir")
-	}
-
-	if (err == nil && fileInfo.Size() == 0) || err != nil {
-		clusterConfig := new(osdconfig.ClusterConfig).Init()
-		clusterConfig.ClusterId = "myCluster"
-		clusterConfig.Description = "myDescription"
-		if jb, err := json.MarshalIndent(clusterConfig, "", "  "); err != nil {
-			logrus.Fatal(err)
-		} else {
-			if err := ioutil.WriteFile("/tmp/config.json", jb, 0666); err != nil {
-				logrus.Fatal(err)
-			}
-		}
-	}
-
-	fileInfo, err = os.Stat("/tmp/nodeConfig.json")
-	if err == nil && fileInfo.IsDir() {
-		logrus.Fatal("log file is a dir")
-	}
-	if (err == nil && fileInfo.Size() == 0) || err != nil {
-		configMap := make(map[string]*osdconfig.NodeConfig)
-		for i :=0; i < 3; i++ {
-			config := new(osdconfig.NodeConfig).Init()
-			config.NodeId = "nodeid_"+strconv.FormatInt(int64(i), 10)
-			config.Storage.Devices = []string{"/dev/sda", "/dev/sdb"}
-			configMap[config.NodeId] = config
-		}
-		if jb, err := json.Marshal(configMap); err != nil {
-			logrus.Fatal(err)
-		} else {
-			if err := ioutil.WriteFile("/tmp/nodeConfig.json", jb, 0666); err != nil {
-				logrus.Fatal(err)
-			}
-		}
-	}
-
-	app := cli.NewApp()
-	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:  "json, j",
-			Usage: "Print JSON output",
-		},
-	}
-	app.Commands = []cli.Command{`
+var dtype = "Data"
 
 func main() {
 	prefix2VarName = make(map[string]string)
 	prefixOrigin = make(map[string]string)
 	prefixDepth = make(map[string]int)
-	config := new(osdconfig.ClusterConfig).Init()
+	config := new(Data).Init()
 
 	var cb bytes.Buffer
 	cw = bufio.NewWriter(&cb)
@@ -172,16 +32,15 @@ func main() {
 	var fb bytes.Buffer
 	fw = bufio.NewWriter(&fb)
 
-	fmt.Fprintln(cw, header)
+	var b bytes.Buffer
+	w := bufio.NewWriter(&b)
+
+	fmt.Fprintln(cw, "// header")
 	prefix2VarName["config"] = "config"
 	prefixOrigin["config"] = "config"
 	prefixDepth["config"] = 0
-	printFields(reflect.Indirect(reflect.ValueOf(config)), false, "config", "Configure cluster",
-		"Configure cluster and nodes. Node ID is required for node configuration. "+
-			"Get node id using pxctl status", "\t\t")
-	fmt.Fprintln(cw, tabs("\t", 0), "}")
-	fmt.Fprintln(cw, tabs("\t", 0), "app.Run(os.Args)")
-	fmt.Fprintln(cw, "}")
+	printFields(reflect.Indirect(reflect.ValueOf(config)), false, "config", "Config params",
+		"Manage config parameters", "\t\t")
 
 	fmt.Fprintln(fw, "func printJson(obj interface{}) error {")
 	fmt.Fprintln(fw, "\t", "if b, err := json.MarshalIndent(obj, \"\", \"  \"); err != nil {")
@@ -195,7 +54,29 @@ func main() {
 
 	cw.Flush()
 	fw.Flush()
-	if err := ioutil.WriteFile("cli.go", append(cb.Bytes(), fb.Bytes()...), 0666); err != nil {
+
+	tmpl, err := template.ParseFiles("cli.tmpl")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	type Data struct {
+		Commands  string
+		Functions string
+		Dtype     string
+	}
+
+	d := new(Data)
+	d.Commands = string(cb.Bytes())
+	d.Functions = string(fb.Bytes())
+	d.Dtype = dtype
+
+	if err := tmpl.Execute(w, d); err != nil {
+		log.Fatal(err)
+	}
+
+	w.Flush()
+	if err := ioutil.WriteFile("cli.go", b.Bytes(), 0666); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("wrote cli.go")
@@ -259,41 +140,9 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 	fmt.Fprintln(cw, tabs(tab, 1), "Action:", getCamelCase("set_"+prefix+"_values,"))
 
 	fmt.Fprintln(fw, "func", getCamelCase("set_"+prefix+"_values(c *cli.Context) error {"))
-	if prefixOrigin[prefix] == "node" {
-		s := "c"
-		for i := 0; i < prefixDepth[prefix]; i++ {
-			s += ".Parent()"
-		}
-		fmt.Fprintln(fw, "\t", "if !"+s+".IsSet(\"node_id\") && !"+s+".IsSet(\"all\") {")
-		fmt.Fprintln(fw, "\t\t", "err := errors.New(\"--node_id must be provided or --all must be set\")")
-		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
-		fmt.Fprintln(fw, "\t\t", "return err")
-		fmt.Fprintln(fw, "\t", "}")
-		fmt.Fprintln(fw, "\t", "configs := new(osdconfig.NodesConfig)")
-		fmt.Fprintln(fw, "\t", "var err error")
-		fmt.Fprintln(fw, "\t", "if "+s+".IsSet(\"all\") {")
-		fmt.Fprintln(fw, "\t\t", "configs, err = osdconfigCaller.EnumerateNodeConf()")
-		fmt.Fprintln(fw, "\t\t", "if err != nil {")
-		fmt.Fprintln(fw, "\t\t\t", "logrus.Error(err)")
-		fmt.Fprintln(fw, "\t\t\t", "return err")
-		fmt.Fprintln(fw, "\t\t", "}")
-		fmt.Fprintln(fw, "\t", "} else {")
-		fmt.Fprintln(fw, "\t\t", "config, err := osdconfigCaller.GetNodeConf("+s+".String(\"node_id\")"+")")
-		fmt.Fprintln(fw, "\t\t", "if err != nil {")
-		fmt.Fprintln(fw, "\t\t\t", "logrus.Error(err)")
-		fmt.Fprintln(fw, "\t\t\t", "return err")
-		fmt.Fprintln(fw, "\t\t", "}")
-		fmt.Fprintln(fw, "\t\t", "*configs = append(*configs, config)")
-		fmt.Fprintln(fw, "\t", "}")
-		fmt.Fprintln(fw, "\t\t", "for _, config := range *configs {")
-		fmt.Fprintln(fw, "\t\t\t", "config := config")
-	} else {
-		fmt.Fprintln(fw, "\t", "config, err := osdconfigCaller.GetClusterConf()")
-		fmt.Fprintln(fw, "\t", "if err != nil {")
-		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
-		fmt.Fprintln(fw, "\t\t", "return err")
-		fmt.Fprintln(fw, "\t", "}")
-	}
+
+	getConfig(fw, dtype)
+
 	fmt.Fprintln(fw, nullChecker(prefix2VarName[prefix]+".field"))
 	fmt.Fprintln(cw, tabs(tab, 1), "Flags: []cli.Flag{")
 	if prefix == "node" {
@@ -332,22 +181,13 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 		}
 	}
 
-	if prefixOrigin[prefix] == "node" {
-		fmt.Fprintln(fw, "\t\t\t", "if err := osdconfigCaller.SetNodeConf(config); err != nil {")
-		fmt.Fprintln(fw, "\t\t\t\t", "logrus.Error(\"Set config for node: \", config.NodeId)")
-		fmt.Fprintln(fw, "\t\t\t\t", "return err")
-		fmt.Fprintln(fw, "\t\t\t", "}")
-		fmt.Fprintln(fw, "\t\t\t", "logrus.Info(\"Set config for node: \", config.NodeId)")
-		fmt.Fprintln(fw, "\t\t", "}")
-		fmt.Fprintln(fw, "\t", "return nil")
-	} else {
-		fmt.Fprintln(fw, "\t", "if err := osdconfigCaller.SetClusterConf(config); err != nil {")
-		fmt.Fprintln(fw, "\t\t", "logrus.Error(\"Set config for cluster\")")
-		fmt.Fprintln(fw, "\t\t", "return err")
-		fmt.Fprintln(fw, "\t", "}")
-		fmt.Fprintln(fw, "\t", "logrus.Info(\"Set config for cluster\")")
-		fmt.Fprintln(fw, "\t", "return nil")
-	}
+	fmt.Fprintln(fw, "\t", "if err := manager.Marshal(config); err != nil {")
+	fmt.Fprintln(fw, "\t\t", "logrus.Error(\"Set config for cluster\")")
+	fmt.Fprintln(fw, "\t\t", "return err")
+	fmt.Fprintln(fw, "\t", "}")
+	fmt.Fprintln(fw, "\t", "logrus.Info(\"Set config for cluster\")")
+	fmt.Fprintln(fw, "\t", "return nil")
+
 	fmt.Fprintln(fw, "}")
 	fmt.Fprintln(fw)
 	fmt.Fprintln(cw, tabs(tab, 1), "},")
@@ -360,54 +200,14 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 	fmt.Fprintln(cw, tabs(tab, 3), "Action:", getCamelCase("show_"+prefix+"_values,"))
 
 	fmt.Fprintln(fw, "func", getCamelCase("show_"+prefix+"_values(c *cli.Context) error {"))
-	if prefixOrigin[prefix] == "node" {
-		s := "c.Parent()"
-		for i := 0; i < prefixDepth[prefix]; i++ {
-			s += ".Parent()"
-		}
-		fmt.Fprintln(fw, "\t", "if !"+s+".IsSet(\"node_id\") && !"+s+".IsSet(\"all\") {")
-		fmt.Fprintln(fw, "\t\t", "err := errors.New(\"--node_id must be provided or --all must be set\")")
-		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
-		fmt.Fprintln(fw, "\t\t", "return err")
-		fmt.Fprintln(fw, "\t", "}")
-		fmt.Fprintln(fw, "\t", "configs := new(osdconfig.NodesConfig)")
-		fmt.Fprintln(fw, "\t", "var err error")
-		fmt.Fprintln(fw, "\t", "if "+s+".IsSet(\"all\") {")
-		fmt.Fprintln(fw, "\t\t", "configs, err = osdconfigCaller.EnumerateNodeConf()")
-		fmt.Fprintln(fw, "\t\t", "if err != nil {")
-		fmt.Fprintln(fw, "\t\t\t", "logrus.Error(err)")
-		fmt.Fprintln(fw, "\t\t\t", "return err")
-		fmt.Fprintln(fw, "\t\t", "}")
-		fmt.Fprintln(fw, "\t", "} else {")
-		fmt.Fprintln(fw, "\t\t", "config, err := osdconfigCaller.GetNodeConf("+s+".String(\"node_id\")"+")")
-		fmt.Fprintln(fw, "\t\t", "if err != nil {")
-		fmt.Fprintln(fw, "\t\t\t", "logrus.Error(err)")
-		fmt.Fprintln(fw, "\t\t\t", "return err")
-		fmt.Fprintln(fw, "\t\t", "}")
-		fmt.Fprintln(fw, "\t\t", "*configs = append(*configs, config)")
-		fmt.Fprintln(fw, "\t", "}")
-		fmt.Fprintln(fw, "\t", "for _, config := range *configs {")
-	} else {
-		fmt.Fprintln(fw, "\t", "config, err := osdconfigCaller.GetClusterConf()")
-		fmt.Fprintln(fw, "\t", "if err != nil {")
-		fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
-		fmt.Fprintln(fw, "\t\t", "return err")
-		fmt.Fprintln(fw, "\t", "}")
-	}
+
+	getConfig(fw, dtype)
+
 	fmt.Fprintln(fw, nullChecker(prefix2VarName[prefix]+".field"))
 	fmt.Fprintln(fw, "\t", "if c.GlobalBool(\"json\") {")
-	if prefixOrigin[prefix] == "node" {
-		fmt.Fprintln(fw, "\t\t", "if err := printJson(struct{NodeId string `json:\"node_id\"`; Config interface{} `json:\"config\"`}{config.NodeId, "+prefix2VarName[prefix]+"}); err != nil {")
-		fmt.Fprintln(fw, "\t\t\t", "return err")
-		fmt.Fprintln(fw, "\t\t", "}")
-		fmt.Fprintln(fw, "\t", "} else {")
-		fmt.Fprintln(fw, "\t\t", "fmt.Println(\"node_id:\", config.NodeId)")
-	} else {
-		fmt.Fprintln(fw, "\t\t", "return printJson("+prefix2VarName[prefix]+")")
-	}
-	if prefixOrigin[prefix] != "node" {
-		fmt.Fprintln(fw, "\t", "}")
-	}
+	fmt.Fprintln(fw, "\t\t", "return printJson("+prefix2VarName[prefix]+")")
+	fmt.Fprintln(fw, "\t", "}")
+
 	fmt.Fprintln(cw, tabs(tab, 3), "Flags: []cli.Flag{")
 	fmt.Fprintln(cw, tabs(tab, 4), "cli.BoolFlag{")
 	fmt.Fprintln(cw, tabs(tab, 5), "Name:", "\"all, a\",")
@@ -448,26 +248,11 @@ func printFields(v reflect.Value, hidden bool, prefix, usage, description, tab s
 			//M[v.Field(i).Kind()] = append(M[v.Field(i).Kind()], prefix+v.Type().Field(i).Name)
 		}
 	}
-	if prefixOrigin[prefix] == "node" {
-		fmt.Fprintln(fw, "\t\t\t", "fmt.Println()")
-		fmt.Fprintln(fw, "\t\t", "}")
-		fmt.Fprintln(fw, "\t", "}")
-	}
 	fmt.Fprintln(fw, "\t", "return nil")
 	fmt.Fprintln(fw, "}")
 	fmt.Fprintln(fw)
 	fmt.Fprintln(cw, tabs(tab, 3), "},")
 	fmt.Fprintln(cw, tabs(tab, 2), "},")
-
-	// subcommand for node
-	if prefix == "config" {
-		config := new(osdconfig.NodeConfig).Init()
-		prefix2VarName["node"] = "config"
-		prefixOrigin["node"] = "node"
-		prefixDepth["node"] = 0
-		printFields(reflect.Indirect(reflect.ValueOf(config)),
-			false, "node", "node usage", "node description", tabs(tab, 2))
-	}
 
 	// subcommand based on nested struct
 	for i := 0; i < v.NumField(); i++ {
@@ -627,4 +412,12 @@ func nullChecker(input string) string {
 	}
 
 	return s
+}
+
+func getConfig(fw *bufio.Writer, dtype string) {
+	fmt.Fprintln(fw, "\t", "config := new("+dtype+").Init()")
+	fmt.Fprintln(fw, "\t", "if err := manager.Unmarshal(config); err != nil {")
+	fmt.Fprintln(fw, "\t\t", "logrus.Error(err)")
+	fmt.Fprintln(fw, "\t\t", "return err")
+	fmt.Fprintln(fw, "\t", "}")
 }

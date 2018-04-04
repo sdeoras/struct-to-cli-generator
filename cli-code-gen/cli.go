@@ -8,8 +8,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
