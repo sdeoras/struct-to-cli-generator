@@ -55,7 +55,7 @@ func main() {
 	cw.Flush()
 	fw.Flush()
 
-	tmpl, err := template.ParseFiles("cli.tmpl")
+	tmpl, err := template.ParseFiles("cli.tmpl.go")
 	if err != nil {
 		log.Fatal(err)
 	}
